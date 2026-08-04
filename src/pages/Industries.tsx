@@ -1,0 +1,64 @@
+import { useLanguage } from '../context/LanguageContext'
+import { industriesData } from '../data/industries'
+import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
+
+export default function Industries() {
+  const { locale } = useLanguage()
+
+  return (
+    <div className="font-sans min-h-screen bg-slate-50">
+      {/* Industries Hero */}
+      <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
+        <img
+          src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
+            {locale === 'ar' ? 'القطاعات التي نخدمها' : 'INDUSTRIES WE SERVE'}
+          </span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+            {locale === 'ar' ? 'خبرات هندسية لمختلف القطاعات الصناعية' : 'Engineering Expertise Across Industry'}
+          </h1>
+          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
+            {locale === 'ar'
+              ? 'مستعدون لتلبية احتياجات كافة القطاعات الكبرى في المملكة بفضل مجموعتنا الشاملة من التجهيزات والحلول.'
+              : 'Empowering major segments in the Kingdom with highly reliable, standard-compliant components and utility packages.'}
+          </p>
+        </div>
+      </section>
+
+      {/* Industries List */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {industriesData.map((ind) => (
+            <div
+              key={ind.id}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 flex flex-col h-full text-start"
+            >
+              <div className="h-56 overflow-hidden relative">
+                <img
+                  src={ind.image}
+                  alt={ind.name[locale]}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="p-6 flex flex-col flex-grow space-y-3">
+                <h3 className="text-lg font-bold text-slate-900">{ind.name[locale]}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed flex-grow">
+                  {ind.description[locale]}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Reusable Challenge CTA above Footer */}
+      <IndustrialChallengeCTA bgImage="https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=1200&q=80" />
+
+    </div>
+  )
+}

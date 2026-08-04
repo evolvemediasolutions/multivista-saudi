@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-heading: "Manrope", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-arabic: "Noto Sans Arabic", system-ui, sans-serif;
+
+  --color-brand-primary: #005a9c;
+  --color-brand-secondary: #003366;
+  --color-brand-accent: #0088cc;
+  --color-brand-light: #f4f8fb;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
+  }
+  
+  /* Bold text styling using Manrope for English LTR */
+  [dir="ltr"] h1, [dir="ltr"] h2, [dir="ltr"] h3, [dir="ltr"] h4, [dir="ltr"] h5, [dir="ltr"] h6,
+  [dir="ltr"] strong, [dir="ltr"] b,
+  [dir="ltr"] .font-semibold, [dir="ltr"] .font-bold, [dir="ltr"] .font-extrabold, [dir="ltr"] .font-black {
+    font-family: "Manrope", system-ui, sans-serif;
+  }
+
+  /* Proper line heights and styling for RTL Arabic text */
+  [dir="rtl"] {
+    font-family: "Noto Sans Arabic", system-ui, sans-serif;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes marqueeLtr {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marqueeRtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+
+.animate-marquee-ltr {
+  display: flex;
+  width: max-content;
+  animation: marqueeLtr 25s linear infinite;
+}
+
+.animate-marquee-rtl {
+  display: flex;
+  width: max-content;
+  animation: marqueeRtl 25s linear infinite;
+}
+
+.animate-marquee-ltr:hover, .animate-marquee-rtl:hover {
+  animation-play-state: paused;
+}
