@@ -8,30 +8,32 @@ export default function Industries() {
   return (
     <div className="font-sans min-h-screen bg-slate-50">
       {/* Industries Hero */}
-      <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-            {locale === 'ar' ? 'القطاعات التي نخدمها' : 'INDUSTRIES WE SERVE'}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {locale === 'ar' ? 'خبرات هندسية لمختلف القطاعات الصناعية' : 'Engineering Expertise Across Industry'}
-          </h1>
-          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-            {locale === 'ar'
-              ? 'مستعدون لتلبية احتياجات كافة القطاعات الكبرى في المملكة بفضل مجموعتنا الشاملة من التجهيزات والحلول.'
-              : 'Empowering major segments in the Kingdom with highly reliable, standard-compliant components and utility packages.'}
-          </p>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? 'الرئيسية / القطاعات' : 'HOME / INDUSTRIES'}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {locale === 'ar' ? 'خبرات هندسية لمختلف القطاعات الصناعية' : 'Engineering Expertise Across Industry'}
+            </h1>
+            <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base">
+              {locale === 'ar'
+                ? 'مستعدون لتلبية احتياجات كافة القطاعات الكبرى في المملكة بفضل مجموعتنا الشاملة من التجهيزات والحلول.'
+                : 'Empowering major segments in the Kingdom with highly reliable, standard-compliant components and utility packages.'}
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* Industries List */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {industriesData.map((ind) => (
             <div

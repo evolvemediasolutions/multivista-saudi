@@ -22,25 +22,27 @@ export default function Chairman() {
   return (
     <div className="font-sans min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <section className="bg-slate-900 text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-            {locale === 'ar' ? 'القيادة والريادة' : 'LEADERSHIP'}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {locale === 'ar' ? 'الخبرة والخدمة بشغف' : 'Expertise and Serving with Passion'}
-          </h1>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? 'الرئيسية / من نحن / رسالة رئيس مجلس الإدارة' : 'HOME / ABOUT US / CHAIRMAN MESSAGE'}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {locale === 'ar' ? 'الخبرة والخدمة بشغف' : 'Expertise and Serving with Passion'}
+            </h1>
+          </div>
+        </section>
+      </div>
 
       {/* Message Content Section */}
-      <section className="py-24 px-4 max-w-7xl mx-auto">
+      <section className="py-24 px-4 max-w-[1360px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           
           {/* Chairman Image Card */}

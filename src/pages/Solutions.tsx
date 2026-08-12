@@ -12,30 +12,32 @@ export default function Solutions() {
   return (
     <div className="font-sans min-h-screen bg-slate-50">
       {/* Solutions Hero */}
-      <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/50 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-            {locale === 'ar' ? 'قدراتنا الفنية' : 'OUR CAPABILITIES'}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {locale === 'ar' ? 'حلول هندسية للعمليات الصناعية الحيوية' : 'Solutions That Work'}
-          </h1>
-          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-            {locale === 'ar'
-              ? 'مجموعة متكاملة من الحلول الهندسية والصناعية المصممة لتلبية متطلبات التطبيقات الحرجة في الأسواق السعودية.'
-              : 'A comprehensive suite of engineering and industrial solutions designed to meet the demands of critical applications in Saudi markets.'}
-          </p>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? 'الرئيسية / الحلول الصناعية' : 'HOME / INDUSTRIAL SOLUTIONS'}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {locale === 'ar' ? 'حلول هندسية للعمليات الصناعية الحيوية' : 'Solutions That Work'}
+            </h1>
+            <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base">
+              {locale === 'ar'
+                ? 'مجموعة متكاملة من الحلول الهندسية والصناعية المصممة لتلبية متطلبات التطبيقات الحرجة في الأسواق السعودية.'
+                : 'A comprehensive suite of engineering and industrial solutions designed to meet the demands of critical applications in Saudi markets.'}
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* Solutions Showcase List (Image 2 Style) */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
+      <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
         {solutionsData.map((sol, idx) => {
           const isEven = idx % 2 === 0
           return (

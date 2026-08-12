@@ -13,6 +13,11 @@ import Events from './pages/Events'
 import Contact from './pages/Contact'
 import NotFound from './pages/NotFound'
 import Chairman from './pages/Chairman'
+import Sustainability from './pages/Sustainability'
+import Careers from './pages/Careers'
+import Insights from './pages/Insights'
+import Why3T from './pages/Why3T'
+import OpenPositions from './pages/OpenPositions'
 import { useEffect } from 'react'
 
 function RootRedirect() {
@@ -125,6 +130,46 @@ function App() {
             element={
               <LocaleWrapper>
                 <Contact />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/sustainability"
+            element={
+              <LocaleWrapper>
+                <Sustainability />
+              </LocaleWrapper>
+            }
+          />
+           <Route
+            path="/:lang/careers"
+            element={
+              <LocaleWrapper>
+                <Careers />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/why-3t"
+            element={
+              <LocaleWrapper>
+                <Why3T />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/open-positions"
+            element={
+              <LocaleWrapper>
+                <OpenPositions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/insights"
+            element={
+              <LocaleWrapper>
+                <Insights />
               </LocaleWrapper>
             }
           />

@@ -87,28 +87,30 @@ export default function Contact() {
     <div className="font-sans min-h-screen bg-slate-50">
       
       {/* Contact Header */}
-      <section className="bg-slate-900 text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1517840901100-8179e982acb7?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-            {t('contact.subtitle')}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {t('contact.title')}
-          </h1>
-          <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-            {t('contact.description')}
-          </p>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1517840901100-8179e982acb7?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? 'الرئيسية / اتصل بنا' : 'HOME / CONTACT US'}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {t('contact.title')}
+            </h1>
+            <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base">
+              {t('contact.description')}
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* Main Grid: Form + Address Info */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Address and details */}

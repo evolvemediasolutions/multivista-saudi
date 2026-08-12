@@ -1,12 +1,11 @@
 import { useParams, Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { partnersData } from '../data/partners'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function PartnerDetail() {
   const { slug } = useParams<{ slug: string }>()
-  const { locale, dir } = useLanguage()
+  const { locale } = useLanguage()
 
   const partner = partnersData.find((p) => p.slug === slug)
 
@@ -34,66 +33,27 @@ export default function PartnerDetail() {
   return (
     <div className="font-sans min-h-screen bg-slate-50">
 
-      {/* Partner Header with Background Image and Centered Text */}
-      <section className="bg-slate-900 text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/65 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <Link
-            to={localizedPath('/partners')}
-            className="inline-flex items-center gap-2 text-sm text-brand-accent hover:underline font-semibold"
-          >
-            {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-            {locale === 'ar' ? 'العودة للشركاء' : 'Back to Partners'}
-          </Link>
-
-          {partner.slug === 'rockwell-automation' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'شريك رئيسي لـ 3T' : '3T PRINCIPAL PARTNER'}
+      {/* Hero section */}
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/65 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? `الرئيسية / شركاؤنا / ${partner.name}` : `HOME / PARTNERS / ${partner.name.toUpperCase()}`}
             </span>
-          )}
-          {partner.slug === 'epp-composites' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'هندسة المواد المركبة' : 'COMPOSITE ENGINEERING'}
-            </span>
-          )}
-          {partner.slug === 'spp-pumps' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'حلول الضخ الهندسية' : 'ENGINEERED PUMPING SOLUTIONS'}
-            </span>
-          )}
-          {partner.slug === 'kirloskar-pneumatic' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'هندسة بلا حدود' : 'ENGINEERING WITHOUT LIMITS'}
-            </span>
-          )}
-          {partner.slug === 'kirloskar-chillers' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'التدفئة وتكييف الهواء وتبريد العمليات' : 'HVAC & PROCESS COOLING'}
-            </span>
-          )}
-          {partner.slug === 'hms-networks' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'الاتصال الصناعي المتكامل' : 'INDUSTRIAL CONNECTIVITY'}
-            </span>
-          )}
-          {partner.slug === 'prosoft-technology' && (
-            <span className="text-xs font-bold uppercase tracking-widest text-brand-accent block pt-4">
-              {locale === 'ar' ? 'الاتصالات الصناعية المتطورة' : 'INDUSTRIAL COMMUNICATION'}
-            </span>
-          )}
-
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight">{partner.name}</h1>
-          <p className="text-slate-300 max-w-2xl mx-auto text-base sm:text-lg">{partner.description[locale]}</p>
-        </div>
-      </section>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">{partner.name}</h1>
+            <p className="text-slate-300 max-w-2xl mx-auto text-sm sm:text-base">{partner.description[locale]}</p>
+          </div>
+        </section>
+      </div>
 
       {/* Details & Solutions */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="w-full space-y-12">
 
           {partner.slug === 'rockwell-automation' ? (

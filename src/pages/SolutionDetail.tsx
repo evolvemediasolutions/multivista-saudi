@@ -2,12 +2,12 @@ import { useParams, Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { solutionsData } from '../data/solutions'
 import { partnersData } from '../data/partners'
-import { CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function SolutionDetail() {
   const { slug } = useParams<{ slug: string }>()
-  const { locale, dir } = useLanguage()
+  const { locale } = useLanguage()
 
   const solution = solutionsData.find((s) => s.slug === slug)
 
@@ -39,29 +39,27 @@ export default function SolutionDetail() {
   return (
     <div className="font-sans min-h-screen bg-slate-50">
       {/* Solution Header / Banner */}
-      <section className="bg-slate-900 text-white py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img
-          src={solution.image}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 space-y-4">
-          <Link
-            to={localizedPath('/solutions')}
-            className="inline-flex items-center gap-2 text-sm text-brand-accent hover:underline font-semibold"
-          >
-            {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
-            {locale === 'ar' ? 'العودة للحلول' : 'Back to Solutions'}
-          </Link>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-            {solution.title[locale]}
-          </h1>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <img
+            src={solution.image}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? `الرئيسية / الحلول الصناعية / ${solution.title[locale]}` : `HOME / INDUSTRIAL SOLUTIONS / ${solution.title[locale].toUpperCase()}`}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
+              {solution.title[locale]}
+            </h1>
+          </div>
+        </section>
+      </div>
 
       {/* Main Details */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Main Description */}

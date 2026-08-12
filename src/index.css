@@ -5,10 +5,10 @@
   --font-heading: "Manrope", "Noto Sans Arabic", system-ui, sans-serif;
   --font-arabic: "Noto Sans Arabic", system-ui, sans-serif;
 
-  --color-brand-primary: #005a9c;
-  --color-brand-secondary: #003366;
-  --color-brand-accent: #0088cc;
-  --color-brand-light: #f4f8fb;
+  --color-brand-primary: #187645;
+  --color-brand-secondary: #0f4d2d;
+  --color-brand-accent: #22995b;
+  --color-brand-light: #f1f8f4;
 }
 
 @layer base {
@@ -21,6 +21,23 @@
   [dir="ltr"] strong, [dir="ltr"] b,
   [dir="ltr"] .font-semibold, [dir="ltr"] .font-bold, [dir="ltr"] .font-extrabold, [dir="ltr"] .font-black {
     font-family: "Manrope", system-ui, sans-serif;
+  }
+
+  /* Reduce font weight globally for headers and bold classes */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 400 !important;
+  }
+
+  .font-extrabold, .font-black {
+    font-weight: 500 !important;
+  }
+
+  .font-bold, strong, b {
+    font-weight: 500 !important;
+  }
+
+  .font-semibold {
+    font-weight: 400 !important;
   }
 
   /* Proper line heights and styling for RTL Arabic text */

@@ -155,25 +155,27 @@ export default function About() {
     <div className="font-sans min-h-screen bg-slate-50">
       
       {/* 1. Hero Section */}
-      <section className="bg-slate-900 text-white py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/65 z-10"></div>
-        <img
-          src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-            {locale === 'ar' ? 'عن 3T السعودية' : 'ABOUT 3T SAUDI'}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight">
-            {locale === 'ar' ? 'خلق القيمة من خلال التميز الهندي' : 'Creating Value Through Engineering Excellence'}
-          </h1>
-        </div>
-      </section>
+      <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/65 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 text-center space-y-4">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+              {locale === 'ar' ? 'الرئيسية / من نحن' : 'HOME / ABOUT US'}
+            </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+              {locale === 'ar' ? 'خلق القيمة من خلال التميز الهندسي' : 'Creating Value Through Engineering Excellence'}
+            </h1>
+          </div>
+        </section>
+      </div>
 
       {/* 2. Intro Section */}
-      <section className="py-20 px-4 max-w-7xl mx-auto text-start">
+      <section className="py-20 px-4 max-w-[1360px] mx-auto text-start">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           <div className="lg:col-span-4">
             <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block mb-2">
@@ -200,7 +202,7 @@ export default function About() {
 
       {/* 3. Our Story / Journey Section (Sticky timeline) */}
       <section id="story" className="py-24 bg-white px-4 border-t border-b border-slate-100">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* Left Side (Sticky on desktop) */}
           <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4 text-start">
@@ -229,9 +231,9 @@ export default function About() {
                 <div className="absolute -left-[41px] rtl:-left-0 rtl:-right-[41px] top-6 h-4 w-4 rounded-full bg-slate-900 border-2 border-slate-50 group-hover:bg-brand-primary transition-colors duration-300 z-10"></div>
                 
                 {/* Milestone card */}
-                <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 space-y-6 text-start">
-                  <div className="space-y-2">
-                    <span className="text-3xl font-black text-brand-primary block tracking-tight">
+                <div className="bg-white border border-slate-100 rounded-3xl p-0 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden text-start">
+                  <div className="pt-8 px-6 sm:px-8 pb-6 space-y-2">
+                    <span className="text-3xl font-black text-brand-accent block tracking-tight">
                       {item.year}
                     </span>
                     <h3 className="text-xl font-bold text-slate-950">
@@ -242,7 +244,7 @@ export default function About() {
                     </p>
                   </div>
                   
-                  <div className="rounded-2xl overflow-hidden h-60 sm:h-72 relative shadow-sm border border-slate-100 bg-white">
+                  <div className="w-full h-60 sm:h-72 overflow-hidden border-t border-slate-100">
                     <img 
                       src={item.image} 
                       alt="" 
@@ -259,7 +261,7 @@ export default function About() {
       </section>
 
       {/* 4. Our Approach & Principles Section */}
-      <section className="py-24 px-4 max-w-7xl mx-auto text-start">
+      <section className="py-24 px-4 max-w-[1360px] mx-auto text-start">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-6">
             <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
@@ -301,7 +303,7 @@ export default function About() {
 
       {/* 5. Vision & Mission Section */}
       <section id="vision-mission" className="py-24 bg-white px-4 border-t border-b border-slate-100 font-sans">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Vision Card */}
           <div className="relative rounded-3xl overflow-hidden shadow-xl min-h-[340px] flex flex-col justify-end p-8 sm:p-10 group border border-slate-800">
@@ -355,7 +357,7 @@ export default function About() {
       </section>
 
       {/* 6. Our Culture Section */}
-      <section id="culture" className="py-24 px-4 max-w-7xl mx-auto text-start">
+      <section id="culture" className="py-24 px-4 max-w-[1360px] mx-auto text-start">
         <div className="space-y-12 mb-16">
           <div className="max-w-3xl space-y-4">
             <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
@@ -395,7 +397,7 @@ export default function About() {
       {/* 7. Brand Identity Section (Clean solid background) */}
       <section id="identity" className="py-24 bg-white border-t border-slate-100 relative overflow-hidden font-sans">
 
-        <div className="max-w-7xl mx-auto px-4 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+        <div className="max-w-[1360px] mx-auto px-4 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           
           {/* Left Column: Logo Display inside drafting board */}
           <div className="lg:col-span-5 space-y-6 text-start">

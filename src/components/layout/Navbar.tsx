@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useLanguage } from '../../context/LanguageContext'
 import { Menu, X, ChevronDown, Globe2 } from 'lucide-react'
@@ -8,8 +8,18 @@ export default function Navbar() {
   const { locale, setLocale, t, dir } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleLang = () => {
     const nextLocale = locale === 'en' ? 'ar' : 'en'
@@ -64,26 +74,45 @@ export default function Navbar() {
       }))
     },
     {
-      id: 'partners',
-      label: t('nav.partners'),
-      path: '/partners'
-    },
-    {
-      id: 'industries',
-      label: t('nav.industries'),
-      path: '/industries'
-    },
-    {
       id: 'events',
       label: t('nav.events'),
       path: '/events'
+    },
+    {
+      id: 'sustainability',
+      label: t('nav.sustainability'),
+      path: '/sustainability'
+    },
+    {
+      id: 'careers',
+      label: t('nav.careers'),
+      path: '/careers',
+      dropdown: [
+        { label: locale === 'ar' ? 'لماذا 3T' : 'Why 3T', path: '/why-3t' },
+        { label: locale === 'ar' ? 'الوظائف الشاغرة' : 'Open Positions', path: '/open-positions' }
+      ]
+    },
+    {
+      id: 'insights',
+      label: t('nav.insights'),
+      path: '/insights'
     }
   ]
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm font-sans">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+    <header className={`top-0 left-0 right-0 z-50 w-full transition-all duration-300 font-sans ${
+      isScrolled 
+        ? 'fixed py-0 px-0 bg-white border-b border-slate-200 shadow-sm' 
+        : 'absolute py-4 px-4 sm:px-6 lg:px-8 bg-transparent'
+    }`}>
+      <nav className={`transition-all duration-300 max-w-[1360px] mx-auto ${
+        isScrolled 
+          ? 'bg-transparent border-none shadow-none rounded-none px-4 sm:px-6 lg:px-8' 
+          : 'bg-white border border-slate-100 shadow-md rounded-full px-6 sm:px-8'
+      }`}>
+        <div className={`flex items-center justify-between transition-all duration-300 ${
+          isScrolled ? 'h-16 sm:h-20' : 'h-20'
+        }`}>
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -91,7 +120,9 @@ export default function Navbar() {
               <img 
                 src="/LOGO/3T-Saudi.jpg" 
                 alt="3T Saudi Logo" 
-                className="h-12 w-auto object-contain rounded-md"
+                className={`w-auto object-contain rounded-md transition-all duration-300 ${
+                  isScrolled ? 'h-14 sm:h-16' : 'h-18 sm:h-20'
+                }`}
               />
             </Link>
           </div>
@@ -107,7 +138,7 @@ export default function Navbar() {
               >
                 <button
                   onClick={() => navigate(localizedPath(item.path))}
-                  className={`px-4 py-2 text-[14px] font-semibold transition-colors flex items-center gap-1 hover:text-brand-primary rounded-md uppercase tracking-wider ${
+                  className={`px-4 py-2 text-[12px] font-semibold transition-colors flex items-center gap-1 hover:text-brand-primary rounded-md uppercase tracking-wider ${
                     isActive(item.path) ? 'text-brand-primary font-bold bg-brand-light/35' : 'text-slate-700'
                   }`}
                 >
@@ -143,7 +174,7 @@ export default function Navbar() {
             <button
               onClick={toggleLang}
               aria-label="Change language"
-              className="flex items-center justify-center gap-1.5 px-5 h-11 text-[14px] font-bold text-slate-600 hover:text-brand-primary transition-colors cursor-pointer border border-slate-200 hover:border-brand-primary rounded-lg uppercase tracking-wider"
+              className="flex items-center justify-center gap-1.5 px-5 h-11 text-[12px] font-bold text-slate-600 hover:text-brand-primary transition-colors cursor-pointer border border-slate-200 hover:border-brand-primary rounded-lg uppercase tracking-wider"
             >
               <Globe2 className="h-4 w-4" />
               {t('nav.langSwitcher')}
@@ -152,7 +183,7 @@ export default function Navbar() {
             {/* Contact Button */}
             <Link
               to={localizedPath('/contact')}
-              className="flex items-center justify-center px-5 h-11 bg-brand-secondary hover:bg-brand-primary text-white text-[14px] font-bold rounded-lg shadow-md hover:shadow-brand-primary/10 transition-all duration-200 uppercase tracking-wider"
+              className="flex items-center justify-center px-5 h-11 bg-brand-secondary hover:bg-brand-primary text-white text-[12px] font-bold rounded-lg shadow-md hover:shadow-brand-primary/10 transition-all duration-200 uppercase tracking-wider"
             >
               {t('nav.contact')}
             </Link>
@@ -182,7 +213,7 @@ export default function Navbar() {
 
       {/* Mobile Drawer menu */}
       {isOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white animate-slide-in">
+        <div className="lg:hidden mt-2 border border-slate-100 bg-white rounded-2xl shadow-lg p-2 animate-slide-in">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navItems.map((item) => (
               <div key={item.id} className="space-y-1">

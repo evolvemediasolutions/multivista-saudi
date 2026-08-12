@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
-import { ArrowRight, ArrowLeft, Shield, Lightbulb, Users, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Shield, Lightbulb, Users, RefreshCw, ChevronLeft, ChevronRight, Cpu, Settings } from 'lucide-react'
 import { industriesData } from '../data/industries'
 import { solutionsData } from '../data/solutions'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
@@ -210,7 +210,7 @@ export default function Home() {
     <div className="font-sans min-h-screen bg-slate-50 overflow-x-hidden">
       
       {/* 1. Hero Section */}
-      <section className="relative h-[650px] overflow-hidden bg-slate-900 text-white">
+      <section className="relative w-full h-screen overflow-hidden bg-slate-900 text-white">
         <div className="absolute inset-0 bg-black/60 z-10"></div>
         <img
           src={slides[0].image}
@@ -218,7 +218,7 @@ export default function Home() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 z-20 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="max-w-3xl space-y-6">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-brand-accent bg-brand-accent/10 px-3 py-1 rounded border border-brand-accent/25">
                 {slides[0].eyebrow[locale]}
@@ -248,9 +248,146 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Partner Logo Strip (Infinite scrolling marquee) */}
+      {/* 2. Workplace / Leadership Stats Section */}
+      <section className="py-24 bg-white font-sans text-center w-full">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-4 mb-16">
+            <span className="text-xs uppercase font-bold text-brand-primary tracking-widest block">
+              {locale === 'ar' ? 'التميز الهندسي' : 'ENGINEERING EXCELLENCE'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+              {locale === 'ar' ? 'خلق القيمة من خلال الخبرة الهندسية' : 'Creating Value Through Engineering Expertise'}
+            </h2>
+            <p className="text-slate-555 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
+              {locale === 'ar' 
+                ? 'تجمع شركة 3T السعودية بين الشراكات التقنية العالمية، والخبرة الصناعية، والدعم الذي يركز على العميل لتقديم حلول هندسية موثوقة. وتتأسس منهجيتنا على التميز التشغيلي، والشفافية، والنجاح المستدام لعملائنا.'
+                : '3T Saudi brings together global technology partnerships, industrial expertise, and customer-focused support to deliver reliable engineering solutions. Our approach is built around operational excellence, transparency, and long-term customer success.'}
+            </p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-start">
+            {/* Card 1 */}
+            <div className="bg-[#f3f7fc] border border-[#e4ecf5] rounded-3xl p-8 space-y-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:bg-gradient-to-b hover:from-brand-primary/30 hover:to-[#f3f7fc]">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-brand-primary text-white">
+                <ArrowRight className="h-6 w-6 transform -rotate-45" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight">7</p>
+                <p className="text-slate-550 text-sm font-semibold leading-normal">
+                  {locale === 'ar' ? 'شركاء رئيسيون' : 'Principal Partners'}
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-[#f3f7fc] border border-[#e4ecf5] rounded-3xl p-8 space-y-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:bg-gradient-to-b hover:from-brand-primary/30 hover:to-[#f3f7fc]">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-brand-primary text-white">
+                {/* Draw a thick circle similar to screenshot */}
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="8"></circle>
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <p className="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight">15+</p>
+                <p className="text-slate-550 text-sm font-semibold leading-normal">
+                  {locale === 'ar' ? 'قطاعات صناعية' : 'Industrial Markets'}
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-[#f3f7fc] border border-[#e4ecf5] rounded-3xl p-8 space-y-6 relative overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:bg-gradient-to-b hover:from-brand-primary/30 hover:to-[#f3f7fc]">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-brand-primary text-white">
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <p className="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight">8</p>
+                <p className="text-slate-550 text-sm font-semibold leading-normal">
+                  {locale === 'ar' ? 'مجالات الحلول' : 'Solution Areas'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Engineering Capabilities Section */}
+      <section className="py-24 bg-slate-50 font-sans text-start w-full border-t border-b border-slate-100">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl space-y-4 mb-16">
+            <span className="text-xs uppercase font-bold text-brand-primary tracking-widest block">
+              {locale === 'ar' ? 'القدرات الهندسية' : 'ENGINEERING CAPABILITIES'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">
+              {locale === 'ar' ? 'حلول مخصصة للصناعة' : 'Solutions Built for Industry'}
+            </h2>
+            <p className="text-slate-550 text-base sm:text-lg leading-relaxed">
+              {locale === 'ar' 
+                ? 'تقدم شركة 3T حلولاً هندسية متكاملة تلبي متطلبات التطبيقات الصناعية الصعبة، بدءاً من الأتمتة والاتصال وصولاً إلى الضغط والتبريد والضخ والمواد المركبة المتقدمة.'
+                : 'From automation and connectivity to compression, cooling, pumping and advanced composites, 3T delivers engineering solutions for demanding industrial applications.'}
+            </p>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Card 1 */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md space-y-6 flex flex-col transition-all duration-300 hover:shadow-lg">
+              <div className="h-64 overflow-hidden rounded-2xl relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80" 
+                  alt={locale === 'ar' ? 'الأتمتة والاتصال' : 'Automation & Connectivity'} 
+                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <div className="space-y-4 flex-grow flex flex-col justify-start">
+                <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-brand-primary text-white">
+                  <Cpu className="h-5 w-5" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-950">
+                  {locale === 'ar' ? 'الأتمتة والاتصال' : 'Automation & Connectivity'}
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  {locale === 'ar' 
+                    ? 'حلول متكاملة للأتمتة وأنظمة التحكم والاتصالات الصناعية للمساعدة في تحسين الاتصال والإنتاجية والأداء التشغيلي.'
+                    : 'Integrated automation, control and industrial communication solutions that help improve connectivity, productivity and operational performance.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-md space-y-6 flex flex-col transition-all duration-300 hover:shadow-lg">
+              <div className="h-64 overflow-hidden rounded-2xl relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80" 
+                  alt={locale === 'ar' ? 'الحلول الميكانيكية والعمليات' : 'Mechanical & Process Solutions'} 
+                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <div className="space-y-4 flex-grow flex flex-col justify-start">
+                <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-brand-primary text-white">
+                  <Settings className="h-5 w-5" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-950">
+                  {locale === 'ar' ? 'الحلول الميكانيكية والعمليات' : 'Mechanical & Process Solutions'}
+                </h3>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  {locale === 'ar' 
+                    ? 'تقنيات هندسية متطورة لتطبيقات الضغط، والتبريد، والضخ في العمليات الصناعية الحرجة.'
+                    : 'Engineered technologies for compression, refrigeration, cooling and pumping applications across critical industrial operations.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Partner Logo Strip (Infinite scrolling marquee) */}
       <section className="bg-white py-16 border-b border-slate-100 my-10 overflow-hidden font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <span className="text-xs uppercase font-bold text-brand-primary tracking-widest block">
             {locale === 'ar' ? 'تقنيات عالمية. خبرات محلية.' : 'GLOBAL TECHNOLOGY. LOCAL EXPERTISE.'}
           </span>
@@ -286,7 +423,7 @@ export default function Home() {
       </section>
 
       {/* 3. About 3T (Redesigned Split Layout) */}
-      <section className="py-24 px-4 max-w-7xl mx-auto my-12">
+      <section className="py-24 px-4 max-w-[1360px] mx-auto my-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
           {/* Image Side with decorative accents */}
@@ -352,7 +489,7 @@ export default function Home() {
       </section>
 
       {/* 4. Solutions Section (Slider style matching user screenshot) */}
-      <section className="py-20 px-4 max-w-7xl mx-auto my-10 font-sans">
+      <section className="py-20 px-4 max-w-[1360px] mx-auto my-10 font-sans">
         <div className="flex flex-col lg:flex-row gap-8 items-stretch">
           
           {/* Left Solid Blue Card */}
@@ -457,7 +594,7 @@ export default function Home() {
         {/* Subtle dotted watermark pattern container */}
         <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left side: Heading, Description, CTA, and Navigation controls */}
@@ -538,7 +675,7 @@ export default function Home() {
       </section>
 
       {/* 6. Vision / Mission Section (Redesigned with premium image backgrounds and overlays) */}
-      <section className="py-20 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 my-12 font-sans">
+      <section className="py-20 px-4 max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 my-12 font-sans">
         
         {/* Vision Card */}
         <div className="relative rounded-3xl overflow-hidden shadow-xl min-h-[300px] flex flex-col justify-end p-8 sm:p-10 group border border-slate-800">
@@ -597,7 +734,7 @@ export default function Home() {
         {/* Subtle dotted watermark pattern container */}
         <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-        <div className="max-w-7xl mx-auto space-y-16 relative z-10">
+        <div className="max-w-[1360px] mx-auto space-y-16 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-3 text-start">
               <span className="text-xs font-bold text-brand-accent uppercase tracking-widest block">
@@ -630,7 +767,7 @@ export default function Home() {
       </section>
 
       {/* 8. Events Section */}
-      <section className="py-20 px-4 max-w-7xl mx-auto my-10">
+      <section className="py-20 px-4 max-w-[1360px] mx-auto my-10">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
             {locale === 'ar' ? 'فعاليات 3T' : '3T EVENTS'}
