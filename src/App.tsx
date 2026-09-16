@@ -5,7 +5,6 @@ import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import About from './pages/About'
 import Solutions from './pages/Solutions'
-import SolutionDetail from './pages/SolutionDetail'
 import Partners from './pages/Partners'
 import PartnerDetail from './pages/PartnerDetail'
 import Industries from './pages/Industries'
@@ -18,6 +17,11 @@ import Careers from './pages/Careers'
 import Insights from './pages/Insights'
 import Why3T from './pages/Why3T'
 import OpenPositions from './pages/OpenPositions'
+import AirGasSolutions from './pages/AirGasSolutions'
+import AutomationControlSolutions from './pages/AutomationControlSolutions'
+import RefrigerationHvacSolutions from './pages/RefrigerationHvacSolutions'
+import NonMetallicSolutions from './pages/NonMetallicSolutions'
+import FirePumpSolutions from './pages/FirePumpSolutions'
 import { useEffect } from 'react'
 
 function RootRedirect() {
@@ -86,10 +90,130 @@ function App() {
             }
           />
           <Route
-            path="/:lang/solutions/:slug"
+            path="/:lang/solutions/air-gas-solutions"
             element={
               <LocaleWrapper>
-                <SolutionDetail />
+                <AirGasSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/refrigeration-hvac-solutions"
+            element={
+              <LocaleWrapper>
+                <RefrigerationHvacSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/refrigeration-hvac"
+            element={
+              <LocaleWrapper>
+                <RefrigerationHvacSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/automation-control"
+            element={
+              <LocaleWrapper>
+                <AutomationControlSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/industrial-automation"
+            element={
+              <LocaleWrapper>
+                <AutomationControlSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/non-metallic-solutions"
+            element={
+              <LocaleWrapper>
+                <NonMetallicSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/non-metallic-solution"
+            element={
+              <LocaleWrapper>
+                <NonMetallicSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/non-metallic-solutions/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/non-metallic-solution/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/fire-pump-solutions"
+            element={
+              <LocaleWrapper>
+                <FirePumpSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/fire-pump-solution"
+            element={
+              <LocaleWrapper>
+                <FirePumpSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/fire-pump-solutions/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/fire-pump-solution/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/automation-control/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/air-gas-solutions/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/:solutionSlug/:partnerSlug"
+            element={
+              <LocaleWrapper>
+                <PartnerDetail />
               </LocaleWrapper>
             }
           />

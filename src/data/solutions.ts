@@ -20,235 +20,148 @@ export interface Solution {
 
 export const solutionsData: Solution[] = [
   {
-    id: 'industrial-automation',
-    slug: 'industrial-automation',
-    category: 'automation',
-    title: {
-      en: 'Industrial Automation',
-      ar: 'الأتمتة الصناعية'
-    },
-    description: {
-      en: 'Drive production efficiency and reliability with cutting-edge control systems, drives, and smart factory instrumentation engineered for heavy-duty environments.',
-      ar: 'عزز كفاءة الإنتاج وموثوقيته من خلال أنظمة التحكم المتقدمة والمحركات وأجهزة المصانع الذكية المصممة للبيئات الشاقة.'
-    },
-    features: {
-      en: [
-        'Programmable Logic Controllers (PLCs)',
-        'Human Machine Interfaces (HMIs) & SCADA',
-        'Variable Speed Drives (VSDs) & Soft Starters',
-        'Control Panels & Automation Assemblies'
-      ],
-      ar: [
-        'أجهزة التحكم المنطقية القابلة للبرمجة (PLC)',
-        'واجهات المستخدم والآلة (HMI) وأنظمة SCADA',
-        'محركات السرعة المتغيرة وأجهزة البدء الناعم',
-        'لوحات التحكم وتجميعات الأتمتة'
-      ]
-    },
-    image: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&w=800&q=80',
-    partners: ['rockwell-automation', 'prosoft-technology']
-  },
-  {
-    id: 'compressed-air',
-    slug: 'compressed-air',
+    id: 'air-gas-solutions',
+    slug: 'air-gas-solutions',
     category: 'mechanical',
     title: {
-      en: 'Compressed Air Solutions',
-      ar: 'حلول الهواء المضغوط'
+      en: 'Air & Gas Solutions',
+      ar: 'حلول الهواء والغاز'
     },
     description: {
-      en: 'Energy-efficient air compressors, air dryers, and filtration systems designed to deliver clean, dry air for continuous industrial operations.',
-      ar: 'ضواغط هواء موفرة للطاقة، ومجففات هواء، وأنظمة ترشيح مصممة لتوفير هواء نظيف وجاف للعمليات الصناعية المستمرة.'
+      en: 'Delivering reliable compressed air and gas systems, we provide complete solutions that support critical industrial processes with maximum efficiency and uptime. Our innovative technologies and engineering expertise help industries such as Oil & Gas, Pharmaceuticals, Chemicals, Petrochemicals, and Power Generation achieve sustainable, safe, and dependable operations.',
+      ar: 'من خلال تقديم أنظمة موثوقة للهواء والغاز المضغوطين، نوفر حلولاً متكاملة تدعم العمليات الصناعية الحيوية بأعلى كفاءة واستمرارية تشغيل. تساعد تقنياتنا المبتكرة وخبراتنا الهندسية قطاعات مثل النفط والغاز، والأدوية، والكيماويات، والبتروكيماويات، وتوليد الطاقة على تحقيق عمليات مستدامة، آمنة، وموثوقة.'
     },
     features: {
       en: [
-        'Oil-Injected Rotary Screw Compressors',
-        'Oil-Free Air Compressors',
-        'Refrigerated & Desiccant Air Dryers',
-        'Air Receivers & Line Filters'
+        'Oil-Free & Oil-Injected Compressors',
+        'Process Gas Compression Packages',
+        'Advanced Filtration & Air Treatment Systems',
+        'High-Pressure Gas Booster Systems'
       ],
       ar: [
-        'ضواغط هواء لولبية دوارة محقونة بالزيت',
-        'ضواغط هواء خالية من الزيت',
-        'مجففات هواء مبردة وممتصة للرطوبة',
-        'خزانات هواء وفلاتر خطوط الأنابيب'
+        'ضواغط خالية من الزيت ومحقونة بالزيت',
+        'حزم ضغط غاز العمليات المتخصصة',
+        'أنظمة تنقية ومعالجة الهواء المتقدمة',
+        'أنظمة تعزيز ضغط الغاز العالي'
       ]
     },
     image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
     partners: ['kirloskar-pneumatic']
   },
   {
-    id: 'industrial-refrigeration',
-    slug: 'industrial-refrigeration',
+    id: 'refrigeration-hvac-solutions',
+    slug: 'refrigeration-hvac-solutions',
     category: 'cooling',
     title: {
-      en: 'Industrial Refrigeration',
-      ar: 'التبريد الصناعي'
+      en: 'Refrigeration & HVAC Solutions',
+      ar: 'حلول التبريد والتكييف'
     },
     description: {
-      en: 'High-performance cold chain solutions, ammonia/Freon compressors, and evaporative condensers for food processing, petrochemicals, and logistics.',
-      ar: 'حلول سلاسل التبريد عالية الأداء، وضواغط الأمونيا/الفريون، والمكثفات التبخيرية لتصنيع الأغذية والبتروكيماويات والخدمات اللوجستية.'
+      en: 'Delivering comprehensive industrial refrigeration, process cooling, and large-scale HVAC systems, we provide robust solutions engineered for high-efficiency temperature control in demanding industrial and commercial environments.',
+      ar: 'من خلال تقديم أنظمة التبريد الصناعي وتبريد العمليات وأنظمة التكييف واسعة النطاق، نوفر حلولاً موثوقة مصممة للتحكم في درجات الحرارة بأعلى كفاءة في أصعب البيئات الصناعية والتجارية.'
     },
     features: {
       en: [
-        'Ammonia Screw Compressor Packages',
-        'Evaporative Condensers & Chillers',
-        'Cold Room Storage Solutions',
-        'Turnkey Refrigeration Engineering'
+        'Water-Cooled & Air-Cooled Industrial Chillers',
+        'Ammonia & Eco-Refrigerant Screw Compressor Packages',
+        'Cold Chain Storage & Blast Freezing Solutions',
+        'Process Gas Cooling & Heat Rejection Systems'
       ],
       ar: [
-        'حزم ضواغط الأمونيا اللولبية',
-        'المكثفات التبخيرية والمبردات',
-        'حلول تخزين غرف التبريد',
-        'هندسة تبريد متكاملة وجاهزة للتشغيل'
+        'مبردات صناعية مبردة بالماء والهواء',
+        'حزم ضواغط لولبية لغاز الأمونيا والمبردات الصديقة للبيئة',
+        'حلول سلاسل التخزين البارد والتجميد السريع',
+        'تبريد غازات العمليات وأنظمة التبادل الحراري'
       ]
     },
     image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
     partners: ['kirloskar-pneumatic', 'kirloskar-chillers']
   },
   {
-    id: 'process-gas-compression',
-    slug: 'process-gas-compression',
-    category: 'mechanical',
-    title: {
-      en: 'Process Gas Compression',
-      ar: 'ضغط غازات العمليات'
-    },
-    description: {
-      en: 'Custom-built gas compressors engineered to handle hazardous, corrosive, and heavy process gases in refineries and chemical plants.',
-      ar: 'ضواغط غاز مصممة خصيصاً للتعامل مع غازات العمليات الخطرة والمسببة للتآكل والثقيلة في المصافي ومصانع الكيماويات.'
-    },
-    features: {
-      en: [
-        'Reciprocating Gas Compressors',
-        'API 619 Screw Compressor Packages',
-        'High-Pressure Gas Boosters',
-        'Custom Skid Packaging & Controls'
-      ],
-      ar: [
-        'ضواغط الغاز الترددية',
-        'حزم ضواغط لولبية متوافقة مع معيار API 619',
-        'معززات غاز عالية الضغط',
-        'تصميم وبناء لوحات التحكم وحزم التثبيت المخصصة'
-      ]
-    },
-    image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
-    partners: ['kirloskar-pneumatic']
-  },
-  {
-    id: 'hvac-process-cooling',
-    slug: 'hvac-process-cooling',
-    category: 'cooling',
-    title: {
-      en: 'HVAC & Process Cooling',
-      ar: 'التكييف وتبريد العمليات'
-    },
-    description: {
-      en: 'Large-scale liquid chillers, cooling towers, and air handling equipment designed to maintain precise temperatures for critical processes and commercial structures.',
-      ar: 'مبردات سوائل واسعة النطاق، وأبراج تبريد، ومعدات مناولة الهواء المصممة للحفاظ على درجات حرارة دقيقة للعمليات الحرجة والهياكل التجارية.'
-    },
-    features: {
-      en: [
-        'Water-Cooled and Air-Cooled Chillers',
-        'FRP / Cross-flow Cooling Towers',
-        'Air Handling Units (AHUs) & Fan Coil Units',
-        'Energy Audit and Retrofits'
-      ],
-      ar: [
-        'مبردات المياه ومبردات الهواء',
-        'أبراج تبريد FRP / ذات تدفق متقاطع',
-        'وحدات مناولة الهواء (AHUs) ووحدات ملف المروحة',
-        'تدقيق الطاقة وتحديث الأنظمة القديمة'
-      ]
-    },
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-    partners: ['kirloskar-chillers']
-  },
-  {
-    id: 'pumping',
-    slug: 'pumping',
-    category: 'mechanical',
-    title: {
-      en: 'Pumping Solutions',
-      ar: 'حلول الضخ'
-    },
-    description: {
-      en: 'Heavy-duty industrial pumps for water supply, chemical processing, slurry transport, and fire-fighting systems compliant with international standards.',
-      ar: 'مضخات صناعية ثقيلة لإمدادات المياه، والمعالجة الكيميائية، ونقل الطين، وأنظمة مكافحة الحرائق المتوافقة مع المعايير الدولية.'
-    },
-    features: {
-      en: [
-        'End Suction & Split Case Pumps',
-        'Vertical Turbine Pumps',
-        'FM Approved / UL Listed Fire Pump Packages',
-        'Corrosion Resistant Pumping Equipment'
-      ],
-      ar: [
-        'مضخات السحب الطرفي ومضخات العلبة المنقسمة',
-        'مضخات التوربينات الرأسية',
-        'مجموعات مضخات الحريق المعتمدة والمدرجة بـ FM / UL',
-        'معدات ضخ مقاومة للتآكل'
-      ]
-    },
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
-    partners: ['spp-pumps']
-  },
-  {
-    id: 'industrial-communication',
-    slug: 'industrial-communication',
+    id: 'automation-control',
+    slug: 'automation-control',
     category: 'automation',
     title: {
-      en: 'Industrial Communication',
-      ar: 'الاتصالات الصناعية'
+      en: 'Automation & Control Solutions',
+      ar: 'حلول الأتمتة والتحكم'
     },
     description: {
-      en: 'Establish secure, robust, and reliable networking infrastructures connecting shop floor operations to enterprise management systems.',
-      ar: 'أنشئ بنيات تحتية آمنة وقوية وموثوقة لشبكات الاتصال لربط عمليات الإنتاج الأرضية بأنظمة إدارة المؤسسات.'
+      en: 'Delivering intelligent automation, integrated control, and resilient industrial connectivity systems, we provide complete solutions that optimize critical manufacturing and infrastructure operations with maximum uptime, cybersecurity, and productivity.',
+      ar: 'من خلال توفير أنظمة تحكم ذكية، وحلول محركات متقدمة، وبنية تحتية موثوقة للاتصالات الصناعية، نقدم حلولاً متكاملة تدعم العمليات التصنيعية والمرافق الحيوية بأعلى كفاءة واستمرارية تشغيل وأمان سيبراني.'
     },
     features: {
       en: [
-        'Industrial Wireless Modems & Routers',
-        'Protocol Converters & Gateways',
-        'Network Switches & Media Converters',
-        'Remote Access Solutions & Cyber Security'
+        'Programmable Logic Controllers (PLCs) & PACs',
+        'Variable Frequency Drives (VFDs) & Soft Starters',
+        'Stratix Industrial Ethernet Switches & Security',
+        'Predictive Condition Monitoring & IoT Telemetry'
       ],
       ar: [
-        'أجهزة المودم والراوتر اللاسلكية الصناعية',
-        'محولات البروتوكولات وبوابات الاتصال',
-        'مفاتيح الشبكة ومحولات الوسائط',
-        'حلول الوصول عن بعد والأمن السيبراني'
+        'أجهزة التحكم المنطقية القابلة للبرمجة (PLC/PAC)',
+        'محركات ومغيرات التردد المتغير وأجهزة البدء الناعم',
+        'مفاتيح الشبكات الصناعية وأمن أنظمة التحكم',
+        'مراقبة حالة المعدات والقياس عن بعد لإنترنت الأشياء'
       ]
     },
-    image: 'https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=800&q=80',
-    partners: ['hms-networks', 'prosoft-technology']
+    image: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&w=800&q=80',
+    partners: ['rockwell-automation', 'hms-networks', 'prosoft-technology']
   },
   {
-    id: 'frp-grp',
-    slug: 'frp-grp',
+    id: 'non-metallic-solutions',
+    slug: 'non-metallic-solutions',
     category: 'materials',
     title: {
-      en: 'FRP / GRP Solutions',
-      ar: 'حلول FRP / GRP'
+      en: 'Non Metallic Solution',
+      ar: 'حلول المواد غير المعدنية'
     },
     description: {
-      en: 'Lightweight, high-strength composite structures, gratings, piping, and chemical storage tanks engineered for maximum corrosion resistance.',
-      ar: 'هياكل مركبة وخفيفة الوزن وعالية القوة، وحواجز شبكية، وأنابيب، وخزانات تخزين كيميائية مصممة لتوفير أقصى مقاومة للتآكل.'
+      en: 'Delivering comprehensive non-metallic, FRP, and GRP composite systems, we provide advanced corrosion-resistant piping, chemical storage tanks, gratings, and structural solutions engineered for harsh industrial and offshore environments.',
+      ar: 'من خلال تقديم أنظمة متكاملة من المواد غير المعدنية والبلاستيك المقوى بالألياف والزجاج (FRP/GRP)، نوفر حلولاً متطورة للأنابيب المقاومة للتآكل وخزانات المواد الكيميائية والحواجز والحلول الإنشائية المصممة للبيئات الصناعية والبحرية القاسية.'
     },
     features: {
       en: [
-        'FRP / GRP Gratings & Cable Trays',
-        'Chemical Storage Tanks & Vessels',
-        'FRP Pipes & Fittings',
-        'Custom Composite Structural Engineering'
+        'FRP & GRP Chemical Process Piping Systems',
+        'Above-ground & Underground Storage Tanks',
+        'Molded & Pultruded FRP Gratings & Cable Trays',
+        'Custom Structural Profiles & Industrial Ladders'
       ],
       ar: [
-        'حواجز شبكية وحوامل كابلات من FRP / GRP',
-        'خزانات وأوعية تخزين المواد الكيميائية',
-        'أنابيب وقطع تركيب FRP',
-        'الهندسة الإنشائية للمركبات المخصصة'
+        'أنظمة أنابيب العمليات الكيميائية من FRP و GRP',
+        'خزانات التخزين فوق الأرض وتحت الأرض (UGST)',
+        'حواجز شبكية وحوامل كابلات من FRP المقولب والمسحوب',
+        'مقاطع هيكلية وسلالم صناعية متطورة ومخصصة'
       ]
     },
     image: 'https://images.unsplash.com/photo-1535813547-99c456a41d4a?auto=format&fit=crop&w=800&q=80',
     partners: ['epp-composites']
+  },
+  {
+    id: 'fire-pump-solutions',
+    slug: 'fire-pump-solutions',
+    category: 'mechanical',
+    title: {
+      en: 'Fire Pump Solutions',
+      ar: 'حلول مضخات الحريق'
+    },
+    description: {
+      en: 'Delivering world-class FM-Approved and UL-Listed fire pump packages, we provide complete, certified fire protection and emergency water delivery systems engineered to safeguard lives and mission-critical assets across oil & gas, industrial, and high-rise facilities.',
+      ar: 'من خلال توفير مجموعات مضخات حريق عالمية المستوى معتمدة من FM ومدرجة في UL، نقدم أنظمة حماية متكاملة وموثوقة لمكافحة الحرائق وإمداد مياه الطوارئ مصممة لحماية الأرواح والأصول الحيوية في منشآت النفط والغاز والمصانع والأبراج الشاهقة.'
+    },
+    features: {
+      en: [
+        'Horizontal & Vertical Split-Case Fire Pumps',
+        'Vertical Turbine Fire Water Pumps',
+        'Engineered Containerized Fire Pump Houses',
+        'NFPA 20 Compliant Electric & Diesel Systems'
+      ],
+      ar: [
+        'مضخات حريق أفقية ورأسية ذات غلاف منقسم',
+        'مضخات مياه حريق توربينية رأسية',
+        'محطات مضخات حريق مسبقة التجهيز داخل حاويات',
+        'أنظمة كهربائية وديزل متوافقة مع معيار NFPA 20'
+      ]
+    },
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80',
+    partners: ['spp-pumps']
   }
 ]

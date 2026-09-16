@@ -47,68 +47,44 @@ export default function Insights() {
 
   const solutions = [
     {
-      title: { en: 'Industrial Automation', ar: 'الأتمتة الصناعية' },
+      title: { en: 'Air & Gas Solutions', ar: 'حلول الهواء والغاز' },
       desc: {
-        en: 'Integrated automation, control and digital technologies designed to improve productivity and operational visibility.',
-        ar: 'الأتمتة المتكاملة، وأنظمة التحكم والتقنيات الرقمية المصممة لتحسين الإنتاجية والرؤية التشغيلية.'
+        en: 'Delivering reliable compressed air and process gas systems engineered for critical industrial duty.',
+        ar: 'أنظمة موثوقة للهواء والغاز المضغوطين مصممة للعمليات الصناعية الحيوية.'
       },
-      slug: 'industrial-automation'
+      slug: 'air-gas-solutions'
     },
     {
-      title: { en: 'Compressed Air', ar: 'حلول الهواء المضغوط' },
+      title: { en: 'Refrigeration & HVAC Solutions', ar: 'حلول التبريد والتكييف' },
       desc: {
-        en: 'Reliable compressed-air technologies engineered for demanding industrial environments.',
-        ar: 'تقنيات الهواء المضغوط الموثوقة والمصممة للبيئات الصناعية الصعبة.'
+        en: 'Industrial refrigeration compressors, chillers, and large-scale HVAC temperature control.',
+        ar: 'ضواغط التبريد الصناعي، والمبردات وأنظمة التكييف واسعة النطاق.'
       },
-      slug: 'compressed-air'
+      slug: 'refrigeration-hvac-solutions'
     },
     {
-      title: { en: 'Industrial Refrigeration', ar: 'التبريد الصناعي' },
+      title: { en: 'Automation & Control Solutions', ar: 'حلول الأتمتة والتحكم' },
       desc: {
-        en: 'Industrial refrigeration compressors and packages supporting critical process applications.',
-        ar: 'ضواغط وحزم التبريد الصناعي لدعم تطبيقات العمليات الحرجة.'
+        en: 'Intelligent automation, integrated PLCs/PACs, smart drives, and resilient industrial networking.',
+        ar: 'حلول الأتمتة الذكية، وأنظمة التحكم المتكاملة، والمحركات، والاتصالات الصناعية.'
       },
-      slug: 'industrial-refrigeration'
+      slug: 'automation-control'
     },
     {
-      title: { en: 'Process Gas Compression', ar: 'ضغط غازات العمليات' },
+      title: { en: 'Non Metallic Solution', ar: 'حلول المواد غير المعدنية' },
       desc: {
-        en: 'Engineered compression technologies designed around demanding process requirements.',
-        ar: 'تقنيات ضغط غازات العمليات المصممة هندسياً حول متطلبات العمليات الصعبة.'
+        en: 'Advanced FRP/GRP composite piping, chemical storage tanks, and structural profiles for corrosion resistance.',
+        ar: 'أنظمة متكاملة من الأنابيب المركبة والخزانات والمقاطع المقاومة للتآكل.'
       },
-      slug: 'process-gas-compression'
+      slug: 'non-metallic-solutions'
     },
     {
-      title: { en: 'HVAC & Process Cooling', ar: 'التكييف وتبريد العمليات' },
+      title: { en: 'Fire Pump Solutions', ar: 'حلول مضخات الحريق' },
       desc: {
-        en: 'Efficient chilled-water and HVAC solutions for industrial and commercial applications.',
-        ar: 'حلول التكييف وتبريد المياه الفعالة للتطبيقات الصناعية والتجارية.'
+        en: 'FM-Approved and UL-Listed packaged fire pumps and pre-packaged containerized pump houses.',
+        ar: 'مجموعات مضخات حريق معتمدة من FM/UL ومحطات ضخ مسبقة التجهيز.'
       },
-      slug: 'hvac-process-cooling'
-    },
-    {
-      title: { en: 'Pumping Solutions', ar: 'حلول الضخ' },
-      desc: {
-        en: 'High-performance pumping technologies for industrial, water, fire-protection and process applications.',
-        ar: 'تقنيات ضخ عالية الأداء لتطبيقات الصناعة، والمياه، ومكافحة الحرائق، والعمليات.'
-      },
-      slug: 'pumping'
-    },
-    {
-      title: { en: 'Industrial Communication', ar: 'الاتصالات الصناعية' },
-      desc: {
-        en: 'Connected industrial technologies enabling machines, control systems and software to communicate effectively.',
-        ar: 'تقنيات الاتصال الصناعي التي تمكن الآلات وأنظمة التحكم والبرمجيات من الاتصال بفعالية.'
-      },
-      slug: 'industrial-communication'
-    },
-    {
-      title: { en: 'FRP / GRP Solutions', ar: 'حلول FRP / GRP' },
-      desc: {
-        en: 'Advanced composite piping, process equipment and structural solutions engineered for corrosion resistance and long service life.',
-        ar: 'الأنابيب المركبة المتقدمة، ومعدات العمليات والحلول الإنشائية المصممة لمقاومة التآكل والخدمة الطويلة.'
-      },
-      slug: 'frp-grp'
+      slug: 'fire-pump-solutions'
     }
   ]
 

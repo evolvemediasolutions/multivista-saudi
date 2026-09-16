@@ -138,30 +138,39 @@ export default function Navbar() {
               >
                 <button
                   onClick={() => navigate(localizedPath(item.path))}
-                  className={`px-4 py-2 text-[12px] font-semibold transition-colors flex items-center gap-1 hover:text-brand-primary rounded-md uppercase tracking-wider ${
+                  className={`px-4 py-2 text-[12px] font-semibold transition-colors flex items-center gap-1 hover:text-brand-primary rounded-md uppercase tracking-wider cursor-pointer ${
                     isActive(item.path) ? 'text-brand-primary font-bold bg-brand-light/35' : 'text-slate-700'
                   }`}
                 >
                   {item.label}
                   {item.dropdown && (
-                    <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-brand-primary transition-transform duration-200 group-hover:rotate-180" />
+                    <ChevronDown className={`h-4 w-4 text-slate-400 group-hover:text-brand-primary transition-transform duration-150 ${
+                      activeDropdown === item.id ? 'rotate-180 text-brand-primary' : ''
+                    } group-hover:rotate-180`} />
                   )}
                 </button>
 
-                {/* Dropdown Menu */}
-                {item.dropdown && activeDropdown === item.id && (
+                {/* Dropdown Menu with Instant Hover & Hover Bridge */}
+                {item.dropdown && (
                   <div 
-                    className={`absolute ${dir === 'rtl' ? 'right-0' : 'left-0'} mt-1 w-56 rounded-lg bg-white shadow-xl border border-slate-100 py-2 z-50`}
+                    className={`absolute top-full ${dir === 'rtl' ? 'right-0' : 'left-0'} pt-1.5 w-64 z-50 transition-all duration-150 ease-out ${
+                      activeDropdown === item.id 
+                        ? 'opacity-100 visible translate-y-0 pointer-events-auto' 
+                        : 'opacity-0 invisible -translate-y-1 pointer-events-none'
+                    } group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:pointer-events-auto`}
                   >
-                    {item.dropdown.map((sub, idx) => (
-                      <Link
-                        key={idx}
-                        to={localizedPath(sub.path)}
-                        className="block px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 hover:text-brand-primary transition-colors"
-                      >
-                        {sub.label}
-                      </Link>
-                    ))}
+                    <div className="rounded-xl bg-white shadow-xl border border-slate-100/90 py-2 overflow-hidden ring-1 ring-black/5">
+                      {item.dropdown.map((sub, idx) => (
+                        <Link
+                          key={idx}
+                          to={localizedPath(sub.path)}
+                          onClick={() => setActiveDropdown(null)}
+                          className="block px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 hover:bg-brand-light/50 hover:text-brand-primary transition-colors border-l-2 border-transparent hover:border-brand-primary rtl:border-l-0 rtl:hover:border-r-2 rtl:border-transparent rtl:hover:border-brand-primary"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

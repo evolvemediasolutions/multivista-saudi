@@ -74,7 +74,7 @@ export default function Partners() {
                   case 'kirloskar-chillers':
                     return '/PARTNERS LOGO/KCPL.jpg'
                   case 'hms-networks':
-                    return '/PARTNERS LOGO/HMS.jpg'
+                    return '/LOGO/HMS_logo.png'
                   case 'prosoft-technology':
                     return '/PARTNERS LOGO/PROSOFT TECHNOLOGIES.png'
                   default:

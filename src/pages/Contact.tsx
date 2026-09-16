@@ -34,14 +34,11 @@ export default function Contact() {
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
 
   const interestOptions = [
-    { value: 'industrial-automation', label: locale === 'ar' ? 'الأتمتة الصناعية' : 'Industrial Automation' },
-    { value: 'compressed-air', label: locale === 'ar' ? 'حلول الهواء المضغوط' : 'Compressed Air Solutions' },
-    { value: 'industrial-refrigeration', label: locale === 'ar' ? 'التبريد الصناعي' : 'Industrial Refrigeration' },
-    { value: 'process-gas-compression', label: locale === 'ar' ? 'ضغط غازات العمليات' : 'Process Gas Compression' },
-    { value: 'hvac-process-cooling', label: locale === 'ar' ? 'التكييف وتبريد العمليات' : 'HVAC & Process Cooling' },
-    { value: 'pumping-solutions', label: locale === 'ar' ? 'حلول الضخ' : 'Pumping Solutions' },
-    { value: 'industrial-communication', label: locale === 'ar' ? 'الاتصالات الصناعية' : 'Industrial Communication' },
-    { value: 'frp-grp', label: locale === 'ar' ? 'حلول FRP / GRP' : 'FRP / GRP Solutions' }
+    { value: 'air-gas-solutions', label: locale === 'ar' ? 'حلول الهواء والغاز' : 'Air & Gas Solutions' },
+    { value: 'refrigeration-hvac-solutions', label: locale === 'ar' ? 'حلول التبريد والتكييف' : 'Refrigeration & HVAC Solutions' },
+    { value: 'automation-control', label: locale === 'ar' ? 'حلول الأتمتة والتحكم' : 'Automation & Control Solutions' },
+    { value: 'non-metallic-solutions', label: locale === 'ar' ? 'حلول المواد غير المعدنية' : 'Non Metallic Solution' },
+    { value: 'fire-pump-solutions', label: locale === 'ar' ? 'حلول مضخات الحريق' : 'Fire Pump Solutions' }
   ]
 
   const validate = (): boolean => {
