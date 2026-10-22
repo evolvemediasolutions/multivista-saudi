@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { ArrowRight, ArrowLeft, Shield, Lightbulb, Users, RefreshCw, ChevronLeft, ChevronRight, Cpu, Settings } from 'lucide-react'
@@ -33,6 +33,9 @@ export default function Home() {
     }
   }
 
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+
   const slides = [
     {
       title: {
@@ -47,9 +50,71 @@ export default function Home() {
         en: 'Delivering world-class industrial products, engineering expertise and dependable support to businesses across Saudi Arabia.',
         ar: 'نقدم منتجات صناعية عالمية المستوى، وخبرات هندسية، ودعماً موثوقاً للمنشآت والقطاعات الصناعية في المملكة العربية السعودية.'
       },
-      image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1600&q=80'
+      image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1920&q=80',
+      primaryLink: '/solutions',
+      primaryLabel: { en: 'Explore Solutions', ar: 'استكشف الحلول' },
+      secondaryLink: '/contact',
+      secondaryLabel: { en: 'Contact Our Team', ar: 'تواصل مع فريقنا' }
+    },
+    {
+      title: {
+        en: 'Intelligent Automation & Connectivity for Modern Industry',
+        ar: 'أتمتة ذكية واتصال متكامل للصناعات الحديثة'
+      },
+      eyebrow: {
+        en: 'AUTOMATION & CONTROL SYSTEMS',
+        ar: 'أنظمة الأتمتة والتحكم'
+      },
+      desc: {
+        en: 'Empowering critical operations with integrated PLCs, intelligent motor control, smart drives, and secure industrial networks.',
+        ar: 'تمكين العمليات الحيوية بأنظمة تحكم متطورة، ومحركات ذكية، وشبكات صناعية آمنة تلبي أعلى معايير الكفاءة.'
+      },
+      image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1920&q=80',
+      primaryLink: '/partners',
+      primaryLabel: { en: 'Our Technology Partners', ar: 'شركاؤنا التقنيون' },
+      secondaryLink: '/contact',
+      secondaryLabel: { en: 'Request Consultation', ar: 'طلب استشارة هندسية' }
+    },
+    {
+      title: {
+        en: 'Engineered for Reliability, Performance & Safety',
+        ar: 'هندسة متطورة للموثوقية والأداء والسلامة'
+      },
+      eyebrow: {
+        en: 'PROCESS COOLING, GAS & FIRE SAFETY',
+        ar: 'تبريد العمليات وضغط الغاز والسلامة'
+      },
+      desc: {
+        en: 'World-class industrial compressors, chillers, non-metallic composite systems, and certified packaged fire pump houses.',
+        ar: 'ضواغط صناعية ومبردات عالمية، وحلول متكاملة للمواد المركبة المقاومة للتآكل، ومحطات ضخ حريق معتمدة.'
+      },
+      image: 'https://images.unsplash.com/photo-1516937941344-00b4e0337589?auto=format&fit=crop&w=1920&q=80',
+      primaryLink: '/solutions',
+      primaryLabel: { en: 'Discover Capabilities', ar: 'استكشف القدرات الهندسية' },
+      secondaryLink: '/contact',
+      secondaryLabel: { en: 'Get in Touch', ar: 'تواصل معنا' }
     }
   ]
+
+  useEffect(() => {
+    if (isPaused) return
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [currentSlide, isPaused, slides.length])
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+  }
+
+  const goToSlide = (idx: number) => {
+    setCurrentSlide(idx)
+  }
 
   const solutions = [
     {
@@ -185,41 +250,102 @@ export default function Home() {
   return (
     <div className="font-sans min-h-screen bg-slate-50 overflow-x-hidden">
       
-      {/* 1. Hero Section */}
-      <section className="relative w-full h-screen overflow-hidden bg-slate-900 text-white">
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img
-          src={slides[0].image}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+      {/* 1. Hero Section (3 slides auto-rotating every 5 seconds) */}
+      <section 
+        className="relative w-full h-screen overflow-hidden bg-slate-950 text-white"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Background Images with smooth crossfade */}
+        {slides.map((slide, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              idx === currentSlide ? 'opacity-100 z-0' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <img
+              src={slide.image}
+              alt=""
+              className="w-full h-full object-cover transform scale-105 transition-transform duration-[7000ms]"
+            />
+          </div>
+        ))}
+
+        {/* Cinematic dark and directional gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/70 to-slate-950/40 z-10 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none"></div>
+
+        {/* Content container */}
         <div className="absolute inset-0 z-20 flex items-center">
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 w-full">
             <div className="max-w-3xl space-y-6">
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-brand-accent bg-brand-accent/10 px-3 py-1 rounded border border-brand-accent/25">
-                {slides[0].eyebrow[locale]}
+              {/* Eyebrow - matches Screenshot 1 typography */}
+              <span className="text-xs uppercase font-bold text-emerald-400 tracking-widest block transition-all duration-500">
+                {slides[currentSlide].eyebrow[locale]}
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
-                {slides[0].title[locale]}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white transition-all duration-500">
+                {slides[currentSlide].title[locale]}
               </h1>
-              <p className="text-lg text-slate-300 max-w-2xl leading-relaxed">
-                {slides[0].desc[locale]}
+              <p className="text-lg text-slate-300 max-w-2xl leading-relaxed transition-all duration-500">
+                {slides[currentSlide].desc[locale]}
               </p>
               <div className="pt-4 flex flex-wrap gap-4">
                 <Link
-                  to={localizedPath('/solutions')}
-                  className="px-6 py-3.5 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold rounded-lg shadow-lg transition-colors"
+                  to={localizedPath(slides[currentSlide].primaryLink)}
+                  className="px-6 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-lg shadow-lg transition-colors cursor-pointer"
                 >
-                  {locale === 'ar' ? 'استكشف الحلول' : 'Explore Solutions'}
+                  {slides[currentSlide].primaryLabel[locale]}
                 </Link>
                 <Link
-                  to={localizedPath('/contact')}
-                  className="px-6 py-3.5 bg-transparent border border-white hover:bg-white/10 text-white font-bold rounded-lg transition-colors"
+                  to={localizedPath(slides[currentSlide].secondaryLink)}
+                  className="px-6 py-3.5 bg-transparent border border-white hover:bg-white/10 text-white font-bold rounded-lg transition-colors cursor-pointer"
                 >
-                  {locale === 'ar' ? 'تواصل مع فريقنا' : 'Contact Our Team'}
+                  {slides[currentSlide].secondaryLabel[locale]}
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Slide Indicators & Navigation Controls */}
+        <div className="absolute bottom-10 left-0 right-0 z-30 flex items-center justify-between max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 pointer-events-auto">
+          {/* Slide Indicator Bars */}
+          <div className="flex items-center gap-3">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => goToSlide(idx)}
+                aria-label={`Go to slide ${idx + 1}`}
+                className="group py-2 cursor-pointer focus:outline-none"
+              >
+                <div
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    idx === currentSlide
+                      ? 'w-12 bg-emerald-400'
+                      : 'w-4 bg-white/40 group-hover:bg-white/70'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+
+          {/* Prev / Next controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={dir === 'rtl' ? nextSlide : prevSlide}
+              className="h-10 w-10 rounded-full border border-white/20 bg-black/30 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-sm active:scale-95"
+              aria-label="Previous slide"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={dir === 'rtl' ? prevSlide : nextSlide}
+              className="h-10 w-10 rounded-full border border-white/20 bg-black/30 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-sm active:scale-95"
+              aria-label="Next slide"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </section>
@@ -385,7 +511,7 @@ export default function Home() {
               <Link
                 key={idx}
                 to={localizedPath(`/partners/${logo.slug}`)}
-                className={`mx-5 sm:mx-8 flex items-center justify-center h-16 w-28 sm:w-32 filter grayscale hover:grayscale-0 opacity-60 hover:opacity-100 transition-all duration-300 flex-shrink-0 ${logo.scale || ''}`}
+                className={`mx-5 sm:mx-8 flex items-center justify-center h-16 w-28 sm:w-32 hover:scale-105 transition-all duration-300 flex-shrink-0 ${logo.scale || ''}`}
               >
                 <img
                   src={logo.image}
@@ -426,12 +552,9 @@ export default function Home() {
           {/* Content Side */}
           <div className="space-y-6">
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-10 bg-brand-accent rounded-full"></span>
-                <span className="text-xs font-bold text-brand-primary uppercase tracking-widest">
-                  {locale === 'ar' ? 'عن 3T السعودية' : 'ABOUT 3T SAUDI'}
-                </span>
-              </div>
+              <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
+                {locale === 'ar' ? 'عن 3T السعودية' : 'ABOUT 3T SAUDI'}
+              </span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight">
                 {locale === 'ar' ? 'نصنع قيمة حقيقية لعملائنا' : 'Creating Value for Our Customers'}
               </h2>

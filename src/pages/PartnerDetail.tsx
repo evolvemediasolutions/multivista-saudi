@@ -542,7 +542,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
                           <div className="space-y-2">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -669,7 +669,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -870,7 +870,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
                           <div className="space-y-2">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -1105,7 +1105,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -1350,7 +1350,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
                           <div className="space-y-2">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -1777,7 +1777,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
@@ -2016,7 +2016,7 @@ export default function PartnerDetail() {
                         {/* Card Bottom Description */}
                         <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
                           <div className="space-y-3">
-                            <span className="text-[11px] font-bold text-brand-primary uppercase tracking-widest block">
+                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
                               {prod.tag}
                             </span>
                             <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">

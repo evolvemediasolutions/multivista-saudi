@@ -206,7 +206,7 @@ export default function About() {
           
           {/* Left Side (Sticky on desktop) */}
           <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4 text-start">
-            <span className="text-xs font-semibold text-brand-primary uppercase tracking-widest block">
+            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
               {locale === 'ar' ? 'رحلتنا' : 'JOURNEY'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">

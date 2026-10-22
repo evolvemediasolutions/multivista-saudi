@@ -42,7 +42,7 @@ export default function Partners() {
           
           {/* Left Side (Sticky on desktop) */}
           <div className="lg:col-span-4 lg:sticky lg:top-32 space-y-4 text-start">
-            <span className="text-xs font-semibold text-brand-primary uppercase tracking-widest block">
+            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
               {locale === 'ar' ? 'شراكاتنا الهندسية' : 'OUR ALIGNMENT'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -108,7 +108,7 @@ export default function Partners() {
                       <img 
                         src={localLogo} 
                         alt={partner.name} 
-                        className="max-h-full max-w-full object-contain filter grayscale group-hover:grayscale-0 transform group-hover:scale-105 transition-all duration-500 relative z-10" 
+                        className="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-all duration-500 relative z-10" 
                       />
                     </div>
 
