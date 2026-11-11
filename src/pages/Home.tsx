@@ -5,6 +5,7 @@ import { ArrowRight, ArrowLeft, Shield, Lightbulb, Users, RefreshCw, ChevronLeft
 import { industriesData } from '../data/industries'
 import { solutionsData } from '../data/solutions'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
+import CurrentOpeningsSection from '../components/ui/CurrentOpeningsSection'
 
 export default function Home() {
   const { locale, dir } = useLanguage()
@@ -350,7 +351,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Workplace / Leadership Stats Section */}
+      {/* 2. Current Openings Section (Directly after Hero) */}
+      <CurrentOpeningsSection />
+
+      {/* 3. Workplace / Leadership Stats Section */}
       <section className="py-24 bg-white font-sans text-center w-full">
         <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-4 mb-16">

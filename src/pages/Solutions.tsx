@@ -1,11 +1,26 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
-import { solutionsData } from '../data/solutions'
+import { solutionsData as fallbackSolutions, type Solution } from '../data/solutions'
+import { getProducts } from '../services/graphql'
 import { ArrowRight, ArrowLeft } from 'lucide-react'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function Solutions() {
   const { locale, dir, t } = useLanguage()
+  const [solutions, setSolutions] = useState<Solution[]>(fallbackSolutions)
+
+  useEffect(() => {
+    let mounted = true
+    getProducts().then((data) => {
+      if (mounted && data && data.length > 0) {
+        setSolutions(data)
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const localizedPath = (path: string) => `/${locale}${path === '/' ? '' : path}`
 
@@ -38,7 +53,7 @@ export default function Solutions() {
 
       {/* Solutions Showcase List (Image 2 Style) */}
       <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
-        {solutionsData.map((sol, idx) => {
+        {solutions.map((sol, idx) => {
           const isEven = idx % 2 === 0
           return (
             <div

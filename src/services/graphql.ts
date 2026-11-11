@@ -1,0 +1,357 @@
+import { eventsData, type EventItem } from '../data/events'
+import { jobsData, type JobOpening } from '../data/jobs'
+import { solutionsData, type Solution } from '../data/solutions'
+
+export interface BlogPostItem {
+  id: number | string
+  slug?: string
+  tag: { en: string; ar: string }
+  title: { en: string; ar: string }
+  desc: { en: string; ar: string }
+  date: { en: string; ar: string }
+  image: string
+  content?: { en: string; ar: string }
+}
+
+export const WP_GRAPHQL_URL =
+  import.meta.env.VITE_WP_GRAPHQL_URL || 'https://saudicms.multivistaprintsolutions.com/graphql'
+
+/**
+ * Generic GraphQL Fetcher with robust error handling and fallback
+ */
+export async function fetchGraphQL<T = any>(query: string, variables = {}): Promise<T | null> {
+  try {
+    const res = await fetch(WP_GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables }),
+    })
+
+    if (!res.ok) {
+      console.warn(`[WPGraphQL] Request failed with HTTP ${res.status}`)
+      return null
+    }
+
+    const json = await res.json()
+    if (json.errors && json.errors.length > 0) {
+      console.warn('[WPGraphQL] Query returned errors:', json.errors)
+    }
+    return json.data || null
+  } catch (err) {
+    console.warn('[WPGraphQL] Connection error, using static fallback:', err)
+    return null
+  }
+}
+
+/**
+ * 1. Fetch Events from Headless WordPress (with static fallback)
+ */
+export async function getEvents(): Promise<EventItem[]> {
+  const query = `
+    query GetEvents {
+      events(first: 100) {
+        nodes {
+          id
+          slug
+          featuredImage {
+            node {
+              sourceUrl
+            }
+          }
+          eventFields {
+            titleEn
+            titleAr
+            dateEn
+            dateAr
+            locationEn
+            locationAr
+            descriptionEn
+            descriptionAr
+          }
+        }
+      }
+    }
+  `
+
+  const data = await fetchGraphQL<{ events: { nodes: any[] } }>(query)
+  if (data?.events?.nodes && data.events.nodes.length > 0) {
+    return data.events.nodes.map((node) => {
+      const f = node.eventFields || {}
+      return {
+        id: node.slug || node.id,
+        title: {
+          en: f.titleEn || node.slug || 'Event',
+          ar: f.titleAr || f.titleEn || 'فعالية',
+        },
+        date: {
+          en: f.dateEn || '',
+          ar: f.dateAr || f.dateEn || '',
+        },
+        location: {
+          en: f.locationEn || '',
+          ar: f.locationAr || f.locationEn || '',
+        },
+        description: {
+          en: f.descriptionEn || '',
+          ar: f.descriptionAr || f.descriptionEn || '',
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+      }
+    })
+  }
+
+  // Fallback to static data
+  return eventsData
+}
+
+/**
+ * Helper to split multi-line textareas into string arrays
+ */
+function parseLines(text?: string): string[] {
+  if (!text) return []
+  return text
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+}
+
+/**
+ * 2. Fetch Careers / Jobs from Headless WordPress (with static fallback)
+ */
+export async function getCareers(): Promise<JobOpening[]> {
+  const query = `
+    query GetCareers {
+      careers(first: 100) {
+        nodes {
+          id
+          slug
+          careerFields {
+            jobCode
+            isActive
+            titleEn
+            titleAr
+            departmentEn
+            departmentAr
+            designationEn
+            designationAr
+            locationEn
+            locationAr
+            experienceEn
+            experienceAr
+            employmentTypeEn
+            employmentTypeAr
+            aboutRoleEn
+            aboutRoleAr
+            responsibilitiesEn
+            responsibilitiesAr
+            requirementsEn
+            requirementsAr
+          }
+        }
+      }
+    }
+  `
+
+  const data = await fetchGraphQL<{ careers: { nodes: any[] } }>(query)
+  if (data?.careers?.nodes && data.careers.nodes.length > 0) {
+    const validJobs = data.careers.nodes
+      .filter((node) => node.careerFields?.isActive !== false)
+      .map((node) => {
+        const f = node.careerFields || {}
+        return {
+          id: node.slug || node.id,
+          code: f.jobCode || 'VM-NEW',
+          slug: node.slug || node.id,
+          title: {
+            en: f.titleEn || 'Job Opening',
+            ar: f.titleAr || f.titleEn || 'وظيفة شاغرة',
+          },
+          department: {
+            en: f.departmentEn || 'Engineering',
+            ar: f.departmentAr || f.departmentEn || 'الهندسة',
+          },
+          designation: {
+            en: f.designationEn || f.titleEn || 'Engineer',
+            ar: f.designationAr || f.titleAr || 'مهندس',
+          },
+          location: {
+            en: f.locationEn || 'Saudi Arabia',
+            ar: f.locationAr || 'المملكة العربية السعودية',
+          },
+          experience: {
+            en: f.experienceEn || '3-5 Years',
+            ar: f.experienceAr || '٣-٥ سنوات',
+          },
+          employmentType: {
+            en: f.employmentTypeEn || 'Full-time',
+            ar: f.employmentTypeAr || 'دوام كامل',
+          },
+          aboutRole: {
+            en: f.aboutRoleEn || '',
+            ar: f.aboutRoleAr || f.aboutRoleEn || '',
+          },
+          responsibilities: {
+            en: parseLines(f.responsibilitiesEn),
+            ar: parseLines(f.responsibilitiesAr),
+          },
+          requirements: {
+            en: parseLines(f.requirementsEn),
+            ar: parseLines(f.requirementsAr),
+          },
+        }
+      })
+
+    if (validJobs.length > 0) {
+      return validJobs
+    }
+  }
+
+  // Fallback to static jobs
+  return jobsData
+}
+
+/**
+ * 3. Fetch Products / Solutions from Headless WordPress (with static fallback)
+ */
+export async function getProducts(): Promise<Solution[]> {
+  const query = `
+    query GetProducts {
+      products(first: 100) {
+        nodes {
+          id
+          slug
+          featuredImage {
+            node {
+              sourceUrl
+            }
+          }
+          productFields {
+            category
+            titleEn
+            titleAr
+            descriptionEn
+            descriptionAr
+            featuresEn
+            featuresAr
+            brochurePdf {
+              node {
+                mediaItemUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
+  if (data?.products?.nodes && data.products.nodes.length > 0) {
+    return data.products.nodes.map((node) => {
+      const f = node.productFields || {}
+      return {
+        id: node.slug || node.id,
+        slug: node.slug || node.id,
+        category: (f.category as any) || 'mechanical',
+        title: {
+          en: f.titleEn || 'Product',
+          ar: f.titleAr || f.titleEn || 'منتج',
+        },
+        description: {
+          en: f.descriptionEn || '',
+          ar: f.descriptionAr || f.descriptionEn || '',
+        },
+        features: {
+          en: parseLines(f.featuresEn),
+          ar: parseLines(f.featuresAr),
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+        partners: [],
+      }
+    })
+  }
+
+  // Fallback to static solutions
+  return solutionsData
+}
+
+/**
+ * 4. Fetch Blogs (Posts) from Headless WordPress
+ */
+export async function getBlogs(): Promise<BlogPostItem[]> {
+  const query = `
+    query GetPosts {
+      posts(first: 50) {
+        nodes {
+          id
+          slug
+          date
+          title
+          featuredImage {
+            node {
+              sourceUrl
+            }
+          }
+          blogFields {
+            tagEn
+            tagAr
+            titleAr
+            excerptEn
+            excerptAr
+            contentAr
+          }
+          content
+        }
+      }
+    }
+  `
+
+  const data = await fetchGraphQL<{ posts: { nodes: any[] } }>(query)
+  if (data?.posts?.nodes && data.posts.nodes.length > 0) {
+    return data.posts.nodes.map((node, idx) => {
+      const f = node.blogFields || {}
+      return {
+        id: node.id || idx + 1,
+        slug: node.slug,
+        tag: {
+          en: f.tagEn || 'INSIGHTS',
+          ar: f.tagAr || 'رؤى صناعية',
+        },
+        title: {
+          en: node.title || 'Insight',
+          ar: f.titleAr || node.title || 'رؤية صناعية',
+        },
+        desc: {
+          en: f.excerptEn || '',
+          ar: f.excerptAr || f.excerptEn || '',
+        },
+        date: {
+          en: new Date(node.date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+          ar: new Date(node.date).toLocaleDateString('ar-SA', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80',
+        content: {
+          en: node.content || '',
+          ar: f.contentAr || node.content || '',
+        },
+      }
+    })
+  }
+
+  return []
+}

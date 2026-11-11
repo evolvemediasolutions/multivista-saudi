@@ -1,17 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { solutionsData } from '../data/solutions'
+import { getBlogs, type BlogPostItem } from '../services/graphql'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface BlogPost {
-  id: number
-  tag: { en: string; ar: string }
-  title: { en: string; ar: string }
-  desc: { en: string; ar: string }
-  date: { en: string; ar: string }
-  image: string
-}
+type BlogPost = BlogPostItem
 
 export default function Insights() {
   const { locale, dir } = useLanguage()
@@ -99,7 +93,7 @@ export default function Insights() {
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80'
   }
 
-  const posts: BlogPost[] = [
+  const staticPosts: BlogPost[] = [
     {
       id: 1,
       tag: { en: 'DIGITALIZATION', ar: 'التحول الرقمي' },
@@ -167,6 +161,20 @@ export default function Insights() {
       image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=600&q=80'
     }
   ]
+
+  const [posts, setPosts] = useState<BlogPost[]>(staticPosts)
+
+  useEffect(() => {
+    let mounted = true
+    getBlogs().then((cmsPosts) => {
+      if (mounted && cmsPosts && cmsPosts.length > 0) {
+        setPosts(cmsPosts)
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div className="font-sans min-h-screen bg-slate-50 text-slate-800">

@@ -22,6 +22,7 @@ import AutomationControlSolutions from './pages/AutomationControlSolutions'
 import RefrigerationHvacSolutions from './pages/RefrigerationHvacSolutions'
 import NonMetallicSolutions from './pages/NonMetallicSolutions'
 import FirePumpSolutions from './pages/FirePumpSolutions'
+import JobDetail from './pages/JobDetail'
 import { useEffect } from 'react'
 
 function RootRedirect() {
@@ -274,6 +275,14 @@ function App() {
             }
           />
           <Route
+            path="/:lang/careers/:jobSlug"
+            element={
+              <LocaleWrapper>
+                <JobDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
             path="/:lang/why-3t"
             element={
               <LocaleWrapper>
@@ -286,6 +295,14 @@ function App() {
             element={
               <LocaleWrapper>
                 <OpenPositions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/open-positions/:jobSlug"
+            element={
+              <LocaleWrapper>
+                <JobDetail />
               </LocaleWrapper>
             }
           />

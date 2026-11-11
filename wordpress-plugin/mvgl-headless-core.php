@@ -1,0 +1,485 @@
+<?php
+/**
+ * Plugin Name: MVGL Saudi Headless CMS Core
+ * Description: Registers Products, Events, Careers Post Types, ACF Fields, GraphQL Schemas, and CORS for MVGL Saudi Headless Website.
+ * Version: 1.0.0
+ * Author: MVGL / Antigravity
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * 1. Enable CORS for GraphQL Requests from React Frontend
+ */
+add_action('init', function() {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    
+    if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        status_header(200);
+        exit();
+    }
+});
+
+/**
+ * 2. Register Custom Post Types with WPGraphQL Support
+ */
+add_action('init', function() {
+    // 2.1 Products
+    register_post_type('product', [
+        'labels' => [
+            'name' => 'Products',
+            'singular_name' => 'Product',
+            'add_new' => 'Add New Product',
+            'add_new_item' => 'Add New Product',
+            'edit_item' => 'Edit Product',
+            'all_items' => 'All Products',
+        ],
+        'public' => true,
+        'has_archive' => true,
+        'menu_icon' => 'dashicons-products',
+        'supports' => ['title', 'thumbnail', 'editor', 'excerpt'],
+        'show_in_rest' => true,
+        'show_in_graphql' => true,
+        'graphql_single_name' => 'product',
+        'graphql_plural_name' => 'products',
+    ]);
+
+    // 2.2 Events
+    register_post_type('event', [
+        'labels' => [
+            'name' => 'Events',
+            'singular_name' => 'Event',
+            'add_new' => 'Add New Event',
+            'add_new_item' => 'Add New Event',
+            'edit_item' => 'Edit Event',
+            'all_items' => 'All Events',
+        ],
+        'public' => true,
+        'has_archive' => true,
+        'menu_icon' => 'dashicons-calendar-alt',
+        'supports' => ['title', 'thumbnail'],
+        'show_in_rest' => true,
+        'show_in_graphql' => true,
+        'graphql_single_name' => 'event',
+        'graphql_plural_name' => 'events',
+    ]);
+
+    // 2.3 Careers
+    register_post_type('career', [
+        'labels' => [
+            'name' => 'Careers',
+            'singular_name' => 'Career / Job Opening',
+            'add_new' => 'Add New Job Opening',
+            'add_new_item' => 'Add New Job Opening',
+            'edit_item' => 'Edit Job Opening',
+            'all_items' => 'All Careers',
+        ],
+        'public' => true,
+        'has_archive' => true,
+        'menu_icon' => 'dashicons-businessperson',
+        'supports' => ['title'],
+        'show_in_rest' => true,
+        'show_in_graphql' => true,
+        'graphql_single_name' => 'career',
+        'graphql_plural_name' => 'careers',
+    ]);
+});
+
+/**
+ * 3. Programmatically Register ACF Fields with WPGraphQL Support
+ */
+add_action('acf/init', function() {
+    if (!function_exists('acf_add_local_field_group')) {
+        return;
+    }
+
+    // 3.1 EVENT FIELDS
+    acf_add_local_field_group([
+        'key' => 'group_event_fields',
+        'title' => 'Event Details (Bilingual)',
+        'fields' => [
+            [
+                'key' => 'field_event_title_en',
+                'label' => 'Title (English)',
+                'name' => 'title_en',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_title_ar',
+                'label' => 'Title (Arabic)',
+                'name' => 'title_ar',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_date_en',
+                'label' => 'Date (English)',
+                'name' => 'date_en',
+                'type' => 'text',
+                'instructions' => 'e.g. February 15, 2026',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_date_ar',
+                'label' => 'Date (Arabic)',
+                'name' => 'date_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. ١٥ فبراير ٢٠٢٦',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_location_en',
+                'label' => 'Location (English)',
+                'name' => 'location_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Jubail, Saudi Arabia',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_location_ar',
+                'label' => 'Location (Arabic)',
+                'name' => 'location_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. الجبيل، المملكة العربية السعودية',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_event_description_en',
+                'label' => 'Description (English)',
+                'name' => 'description_en',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_event_description_ar',
+                'label' => 'Description (Arabic)',
+                'name' => 'description_ar',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'post_type',
+                    'operator' => '==',
+                    'value' => 'event',
+                ],
+            ],
+        ],
+        'show_in_graphql' => 1,
+        'graphql_field_name' => 'eventFields',
+    ]);
+
+    // 3.2 CAREER FIELDS
+    acf_add_local_field_group([
+        'key' => 'group_career_fields',
+        'title' => 'Career / Job Opening Details (Bilingual)',
+        'fields' => [
+            [
+                'key' => 'field_job_code',
+                'label' => 'Job Code',
+                'name' => 'job_code',
+                'type' => 'text',
+                'instructions' => 'e.g. VM153',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_job_is_active',
+                'label' => 'Is Position Open / Active?',
+                'name' => 'is_active',
+                'type' => 'true_false',
+                'default_value' => 1,
+                'ui' => 1,
+            ],
+            [
+                'key' => 'field_job_title_en',
+                'label' => 'Job Title (English)',
+                'name' => 'title_en',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_job_title_ar',
+                'label' => 'Job Title (Arabic)',
+                'name' => 'title_ar',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_job_department_en',
+                'label' => 'Department (English)',
+                'name' => 'department_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Engineering & Technical',
+            ],
+            [
+                'key' => 'field_job_department_ar',
+                'label' => 'Department (Arabic)',
+                'name' => 'department_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. الهندسة والخدمات الفنية',
+            ],
+            [
+                'key' => 'field_job_designation_en',
+                'label' => 'Designation (English)',
+                'name' => 'designation_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Project Manager',
+            ],
+            [
+                'key' => 'field_job_designation_ar',
+                'label' => 'Designation (Arabic)',
+                'name' => 'designation_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. مدير مشروع',
+            ],
+            [
+                'key' => 'field_job_location_en',
+                'label' => 'Location (English)',
+                'name' => 'location_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Dammam, Saudi Arabia',
+            ],
+            [
+                'key' => 'field_job_location_ar',
+                'label' => 'Location (Arabic)',
+                'name' => 'location_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. الدمام، المملكة العربية السعودية',
+            ],
+            [
+                'key' => 'field_job_experience_en',
+                'label' => 'Experience (English)',
+                'name' => 'experience_en',
+                'type' => 'text',
+                'instructions' => 'e.g. 5-8 Years',
+            ],
+            [
+                'key' => 'field_job_experience_ar',
+                'label' => 'Experience (Arabic)',
+                'name' => 'experience_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. ٥-٨ سنوات',
+            ],
+            [
+                'key' => 'field_job_employment_type_en',
+                'label' => 'Employment Type (English)',
+                'name' => 'employment_type_en',
+                'type' => 'text',
+                'default_value' => 'Full-time',
+            ],
+            [
+                'key' => 'field_job_employment_type_ar',
+                'label' => 'Employment Type (Arabic)',
+                'name' => 'employment_type_ar',
+                'type' => 'text',
+                'default_value' => 'دوام كامل',
+            ],
+            [
+                'key' => 'field_job_about_role_en',
+                'label' => 'About Role (English)',
+                'name' => 'about_role_en',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_job_about_role_ar',
+                'label' => 'About Role (Arabic)',
+                'name' => 'about_role_ar',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_job_responsibilities_en',
+                'label' => 'Responsibilities (English - One per line)',
+                'name' => 'responsibilities_en',
+                'type' => 'textarea',
+                'rows' => 5,
+                'instructions' => 'Put each bullet point on a new line',
+            ],
+            [
+                'key' => 'field_job_responsibilities_ar',
+                'label' => 'Responsibilities (Arabic - One per line)',
+                'name' => 'responsibilities_ar',
+                'type' => 'textarea',
+                'rows' => 5,
+                'instructions' => 'ضع كل نقطة في سطر منفصل',
+            ],
+            [
+                'key' => 'field_job_requirements_en',
+                'label' => 'Requirements (English - One per line)',
+                'name' => 'requirements_en',
+                'type' => 'textarea',
+                'rows' => 5,
+                'instructions' => 'Put each bullet point on a new line',
+            ],
+            [
+                'key' => 'field_job_requirements_ar',
+                'label' => 'Requirements (Arabic - One per line)',
+                'name' => 'requirements_ar',
+                'type' => 'textarea',
+                'rows' => 5,
+                'instructions' => 'ضع كل نقطة في سطر منفصل',
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'post_type',
+                    'operator' => '==',
+                    'value' => 'career',
+                ],
+            ],
+        ],
+        'show_in_graphql' => 1,
+        'graphql_field_name' => 'careerFields',
+    ]);
+
+    // 3.3 PRODUCT FIELDS
+    acf_add_local_field_group([
+        'key' => 'group_product_fields',
+        'title' => 'Product Details (Bilingual)',
+        'fields' => [
+            [
+                'key' => 'field_product_category',
+                'label' => 'Category',
+                'name' => 'category',
+                'type' => 'select',
+                'choices' => [
+                    'mechanical' => 'Air & Gas / Mechanical Solutions',
+                    'cooling' => 'Refrigeration & HVAC',
+                    'automation' => 'Automation & Control',
+                    'materials' => 'Non-Metallic Solutions',
+                ],
+                'default_value' => 'mechanical',
+            ],
+            [
+                'key' => 'field_product_title_en',
+                'label' => 'Title (English)',
+                'name' => 'title_en',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_product_title_ar',
+                'label' => 'Title (Arabic)',
+                'name' => 'title_ar',
+                'type' => 'text',
+                'required' => 1,
+            ],
+            [
+                'key' => 'field_product_description_en',
+                'label' => 'Description (English)',
+                'name' => 'description_en',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_product_description_ar',
+                'label' => 'Description (Arabic)',
+                'name' => 'description_ar',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_product_features_en',
+                'label' => 'Features (English - One per line)',
+                'name' => 'features_en',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_product_features_ar',
+                'label' => 'Features (Arabic - One per line)',
+                'name' => 'features_ar',
+                'type' => 'textarea',
+                'rows' => 4,
+            ],
+            [
+                'key' => 'field_product_brochure',
+                'label' => 'Product Brochure (PDF)',
+                'name' => 'brochure_pdf',
+                'type' => 'file',
+                'return_format' => 'url',
+                'mime_types' => 'pdf',
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'post_type',
+                    'operator' => '==',
+                    'value' => 'product',
+                ],
+            ],
+        ],
+        'show_in_graphql' => 1,
+        'graphql_field_name' => 'productFields',
+    ]);
+
+    // 3.4 BLOG (POST) ARABIC & EXTRA FIELDS
+    acf_add_local_field_group([
+        'key' => 'group_blog_fields',
+        'title' => 'Blog Bilingual Fields (English & Arabic)',
+        'fields' => [
+            [
+                'key' => 'field_blog_tag_en',
+                'label' => 'Tag / Category (English)',
+                'name' => 'tag_en',
+                'type' => 'text',
+                'instructions' => 'e.g. DIGITALIZATION, ROBOTICS, SUPPLY CHAIN',
+            ],
+            [
+                'key' => 'field_blog_tag_ar',
+                'label' => 'Tag / Category (Arabic)',
+                'name' => 'tag_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. التحول الرقمي، الروبوتات',
+            ],
+            [
+                'key' => 'field_blog_title_ar',
+                'label' => 'Title (Arabic)',
+                'name' => 'title_ar',
+                'type' => 'text',
+            ],
+            [
+                'key' => 'field_blog_excerpt_en',
+                'label' => 'Excerpt / Summary (English)',
+                'name' => 'excerpt_en',
+                'type' => 'textarea',
+                'rows' => 3,
+            ],
+            [
+                'key' => 'field_blog_excerpt_ar',
+                'label' => 'Excerpt / Summary (Arabic)',
+                'name' => 'excerpt_ar',
+                'type' => 'textarea',
+                'rows' => 3,
+            ],
+            [
+                'key' => 'field_blog_content_ar',
+                'label' => 'Full Article (Arabic)',
+                'name' => 'content_ar',
+                'type' => 'wysiwyg',
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'post_type',
+                    'operator' => '==',
+                    'value' => 'post',
+                ],
+            ],
+        ],
+        'show_in_graphql' => 1,
+        'graphql_field_name' => 'blogFields',
+    ]);
+});
+

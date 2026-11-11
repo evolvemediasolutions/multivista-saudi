@@ -1,10 +1,25 @@
+import { useState, useEffect } from 'react'
 import { useLanguage } from '../context/LanguageContext'
-import { eventsData } from '../data/events'
+import { eventsData as fallbackEvents, type EventItem } from '../data/events'
+import { getEvents } from '../services/graphql'
 import { Calendar, MapPin } from 'lucide-react'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function Events() {
   const { locale } = useLanguage()
+  const [events, setEvents] = useState<EventItem[]>(fallbackEvents)
+
+  useEffect(() => {
+    let mounted = true
+    getEvents().then((data) => {
+      if (mounted && data && data.length > 0) {
+        setEvents(data)
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div className="font-sans min-h-screen bg-slate-50">
@@ -36,7 +51,7 @@ export default function Events() {
       {/* Events List */}
       <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8">
-          {eventsData.map((ev) => (
+          {events.map((ev) => (
             <div
               key={ev.id}
               className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col lg:flex-row text-start"
