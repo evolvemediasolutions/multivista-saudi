@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { partnersData } from '../data/partners'
+import { getPartnerProducts, type PartnerProduct } from '../services/graphql'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function PartnerDetail() {
@@ -14,9 +15,46 @@ export default function PartnerDetail() {
   const [eppFilter, setEppFilter] = useState('all')
   const [sppFilter, setSppFilter] = useState('all')
   const [prosoftFilter, setProsoftFilter] = useState('all')
+  const [cmsProducts, setCmsProducts] = useState<PartnerProduct[]>([])
 
   const activeSlug = partnerSlug || slug || ''
   const partner = partnersData.find((p) => p.slug === activeSlug)
+
+  useEffect(() => {
+    let mounted = true
+    if (activeSlug) {
+      getPartnerProducts(activeSlug).then((prods) => {
+        if (mounted && prods) {
+          setCmsProducts(prods)
+        }
+      })
+    }
+    return () => {
+      mounted = false
+    }
+  }, [activeSlug])
+
+  const mergeWithCms = (staticList: any[]) => {
+    const formattedCms = cmsProducts.map((p) => ({
+      id: p.id,
+      category: p.category || 'all',
+      tag: partner?.name?.toUpperCase() || p.tag,
+      title: {
+        en: p.title?.en || 'Product',
+        ar: p.title?.ar || p.title?.en || 'منتج',
+      },
+      desc: {
+        en: p.desc?.en || '',
+        ar: p.desc?.ar || p.desc?.en || '',
+      },
+      specs: {
+        en: p.specs?.en || '',
+        ar: p.specs?.ar || p.specs?.en || '',
+      },
+      image: p.image,
+    }))
+    return [...formattedCms, ...staticList]
+  }
 
   if (!partner) {
     return (
@@ -342,7 +380,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid (Matching AIR & GAS SOLUTIONS UI) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'controllers',
@@ -523,7 +561,7 @@ export default function PartnerDetail() {
                       },
                       image: '/AUTOMATION CONTROL/ROCKWELL AUTOMATION/Relays and Timers.png'
                     }
-                  ]
+                  ])
                     .filter((prod) => rockwellFilter === 'all' || prod.category === rockwellFilter)
                     .map((prod, idx) => (
                       <div
@@ -613,7 +651,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'packaged-sets',
@@ -650,7 +688,7 @@ export default function PartnerDetail() {
                       },
                       image: '/PRODUCTS/SPP PUMPS/PRE-PACKAGED PUMP HOUSES.jpg'
                     }
-                  ]
+                  ])
                     .filter((prod) => sppFilter === 'all' || prod.category === sppFilter)
                     .map((prod, idx) => (
                       <div
@@ -742,7 +780,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid (Matching Screenshot & PDF) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'screw',
@@ -851,7 +889,7 @@ export default function PartnerDetail() {
                       },
                       image: '/AIR & GAS SOLUTIONS/Screw Compressor Packages.png'
                     }
-                  ]
+                  ])
                     .filter((prod) => kirloskarFilter === 'all' || prod.category === kirloskarFilter)
                     .map((prod, idx) => (
                       <div
@@ -943,7 +981,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid (Matching Rockwell, Kirloskar Pneumatic & HMS UI) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'centrifugal-chillers',
@@ -1086,7 +1124,7 @@ export default function PartnerDetail() {
                       },
                       image: '/PRODUCTS/KIRLOSKAR CHILLERS/Water to Water Heat Pumps.jpg'
                     }
-                  ]
+                  ])
                     .filter((prod) => chillersFilter === 'all' || prod.category === chillersFilter)
                     .map((prod, idx) => (
                       <div
@@ -1204,7 +1242,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid (Matching Rockwell Automation & AIR & GAS SOLUTIONS UI) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'gateways',
@@ -1331,7 +1369,7 @@ export default function PartnerDetail() {
                       },
                       image: '/AUTOMATION CONTROL/HMS/Redlion By HMS.png'
                     }
-                  ]
+                  ])
                     .filter((prod) => hmsFilter === 'all' || prod.category === hmsFilter)
                     .map((prod, idx) => (
                       <div
@@ -1424,7 +1462,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     // --- GATEWAYS CATEGORY (from public/AUTOMATION CONTROL/PROSOFT/GATEWAYS/) ---
                     {
                       id: 1,
@@ -1758,7 +1796,7 @@ export default function PartnerDetail() {
                       },
                       image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80'
                     }
-                  ]
+                  ])
                     .filter((prod) => prosoftFilter === 'all' || prod.category === prosoftFilter)
                     .map((prod, idx) => (
                       <div
@@ -1852,7 +1890,7 @@ export default function PartnerDetail() {
 
                 {/* 3. Product Cards Grid (Matching kirloskar-pneumatic & Rockwell UI) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-                  {[
+                  {mergeWithCms([
                     {
                       id: 1,
                       category: 'piping',
@@ -1997,7 +2035,7 @@ export default function PartnerDetail() {
                       },
                       image: '/PRODUCTS/EPP COMPOSITE/Wind Turbine Components.jpg'
                     }
-                  ]
+                  ])
                     .filter((prod) => eppFilter === 'all' || prod.category === eppFilter)
                     .map((prod, idx) => (
                       <div

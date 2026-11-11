@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
+import { getProducts } from '../services/graphql'
 import { ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
@@ -36,7 +37,7 @@ export default function AirGasSolutions() {
     }
   }
 
-  const solutionItems = [
+  const staticSolutionItems = [
     {
       num: '01 / 08',
       title: {
@@ -134,6 +135,28 @@ export default function AirGasSolutions() {
       image: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=800&q=80'
     }
   ]
+
+  const [items, setItems] = useState(staticSolutionItems)
+
+  useEffect(() => {
+    let mounted = true
+    getProducts().then((cmsProducts) => {
+      if (!mounted || !cmsProducts || cmsProducts.length === 0) return
+      const mechanical = cmsProducts.filter((p) => p.category === 'mechanical')
+      if (mechanical.length > 0) {
+        const dynamic = mechanical.map((p, idx) => ({
+          num: `0${idx + 1} / 0${mechanical.length}`,
+          title: p.title,
+          desc: p.description,
+          image: p.image,
+        }))
+        setItems([...dynamic, ...staticSolutionItems])
+      }
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const industries = [
     {
@@ -427,7 +450,7 @@ export default function AirGasSolutions() {
               className="flex gap-6 overflow-x-auto pb-4 scrollbar-none snap-x snap-mandatory scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {solutionItems.map((item, idx) => (
+              {items.map((item, idx) => (
                 <div
                   key={idx}
                   className="w-[280px] sm:w-[310px] h-[370px] sm:h-[400px] rounded-3xl overflow-hidden relative shadow-md hover:shadow-xl transition-all duration-300 flex-shrink-0 snap-start block group"

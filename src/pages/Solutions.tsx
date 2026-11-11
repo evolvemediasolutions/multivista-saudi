@@ -14,7 +14,26 @@ export default function Solutions() {
     let mounted = true
     getProducts().then((data) => {
       if (mounted && data && data.length > 0) {
-        setSolutions(data)
+        // Keep the 5 core solutions, and merge/append any new products from WordPress
+        const merged = [...fallbackSolutions]
+        data.forEach((p) => {
+          const idx = merged.findIndex((s) => s.slug === p.slug || s.id === p.id)
+          if (idx !== -1) {
+            merged[idx] = { ...merged[idx], ...p }
+          } else {
+            merged.push({
+              id: p.id,
+              slug: p.slug,
+              category: p.category as any,
+              title: p.title,
+              description: p.description,
+              features: p.features,
+              image: p.image,
+              partners: p.partners || [],
+            })
+          }
+        })
+        setSolutions(merged)
       }
     })
     return () => {
@@ -55,6 +74,9 @@ export default function Solutions() {
       <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
         {solutions.map((sol, idx) => {
           const isEven = idx % 2 === 0
+          const rawCat = sol.category
+          const categoryStr = typeof rawCat === 'string' ? rawCat : (Array.isArray(rawCat) ? rawCat[0] : 'mechanical')
+
           return (
             <div
               key={sol.id}
@@ -65,20 +87,22 @@ export default function Solutions() {
               {/* Text Area */}
               <div className="lg:w-1/2 space-y-6">
                 <span className="text-xs font-bold text-brand-primary uppercase tracking-wider bg-brand-light px-3 py-1 rounded">
-                  {t(`nav.${sol.category}Category`, sol.category.toUpperCase())}
+                  {t(`nav.${categoryStr}Category`, categoryStr ? categoryStr.toUpperCase() : 'SOLUTION')}
                 </span>
-                <h2 className="text-3xl font-extrabold text-slate-900">{sol.title[locale]}</h2>
-                <p className="text-slate-655 leading-relaxed">{sol.description[locale]}</p>
+                <h2 className="text-3xl font-extrabold text-slate-900">{sol.title?.[locale] || sol.title?.en || 'Solution'}</h2>
+                <p className="text-slate-600 leading-relaxed">{sol.description?.[locale] || sol.description?.en || ''}</p>
                 
                 {/* Bullet lists */}
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700 text-start">
-                  {sol.features[locale].map((feat, fidx) => (
-                    <li key={fidx} className="flex items-start gap-2">
-                      <span className="text-brand-accent font-bold mt-0.5">•</span>
-                      <span>{feat}</span>
-                    </li>
-                  ))}
-                </ul>
+                {sol.features?.[locale] && sol.features[locale].length > 0 && (
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700 text-start">
+                    {sol.features[locale].map((feat, fidx) => (
+                      <li key={fidx} className="flex items-start gap-2">
+                        <span className="text-brand-accent font-bold mt-0.5">•</span>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <div className="pt-4 text-start">
                   <Link

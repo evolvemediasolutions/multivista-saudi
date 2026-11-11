@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
- * Description: Registers Products, Events, Careers Post Types, ACF Fields, GraphQL Schemas, and CORS for MVGL Saudi Headless Website.
- * Version: 1.0.0
+ * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
+ * Version: 2.0.0
  * Author: MVGL / Antigravity
  */
 
@@ -25,10 +25,48 @@ add_action('init', function() {
 });
 
 /**
- * 2. Register Custom Post Types with WPGraphQL Support
+ * 2. Automatic Google Translate to Arabic Helper
+ */
+function mvgl_auto_translate_to_arabic($text) {
+    if (empty(trim($text))) {
+        return '';
+    }
+    
+    $encoded = urlencode(trim($text));
+    $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
+    
+    $response = wp_remote_get($url, [
+        'timeout' => 15,
+        'headers' => [
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        ]
+    ]);
+    
+    if (is_wp_error($response)) {
+        return $text;
+    }
+    
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    if (isset($data[0]) && is_array($data[0])) {
+        $translated = '';
+        foreach ($data[0] as $segment) {
+            if (isset($segment[0])) {
+                $translated .= $segment[0];
+            }
+        }
+        return trim($translated);
+    }
+    
+    return $text;
+}
+
+/**
+ * 3. Register Custom Post Types with WPGraphQL Support
  */
 add_action('init', function() {
-    // 2.1 Products
+    // 3.1 Products
     register_post_type('product', [
         'labels' => [
             'name' => 'Products',
@@ -41,14 +79,14 @@ add_action('init', function() {
         'public' => true,
         'has_archive' => true,
         'menu_icon' => 'dashicons-products',
-        'supports' => ['title', 'thumbnail', 'editor', 'excerpt'],
+        'supports' => ['title', 'thumbnail'],
         'show_in_rest' => true,
         'show_in_graphql' => true,
         'graphql_single_name' => 'product',
         'graphql_plural_name' => 'products',
     ]);
 
-    // 2.2 Events
+    // 3.2 Events
     register_post_type('event', [
         'labels' => [
             'name' => 'Events',
@@ -68,7 +106,7 @@ add_action('init', function() {
         'graphql_plural_name' => 'events',
     ]);
 
-    // 2.3 Careers
+    // 3.3 Careers
     register_post_type('career', [
         'labels' => [
             'name' => 'Careers',
@@ -90,14 +128,128 @@ add_action('init', function() {
 });
 
 /**
- * 3. Programmatically Register ACF Fields with WPGraphQL Support
+ * 4. Programmatically Register ACF Fields with WPGraphQL Support
  */
 add_action('acf/init', function() {
     if (!function_exists('acf_add_local_field_group')) {
         return;
     }
 
-    // 3.1 EVENT FIELDS
+    // 4.1 PRODUCT FIELDS (Linked to Partners and Categories)
+    acf_add_local_field_group([
+        'key' => 'group_product_fields',
+        'title' => 'Product Details & Partner Assignment',
+        'fields' => [
+            [
+                'key' => 'field_product_partner',
+                'label' => 'Associated Partner',
+                'name' => 'partner',
+                'type' => 'select',
+                'instructions' => 'Select which Technology Partner this product belongs to',
+                'required' => 1,
+                'choices' => [
+                    'kirloskar-pneumatic' => 'Kirloskar Pneumatic (Air & Gas / Refrigeration)',
+                    'kirloskar-chillers' => 'Kirloskar Chillers (HVAC & Process Cooling)',
+                    'rockwell-automation' => 'Rockwell Automation (Industrial Automation)',
+                    'spp-pumps' => 'SPP Pumps (Fire Protection & Critical Pumps)',
+                    'epp-composites' => 'EPP Composites (FRP/GRP Non-Metallic)',
+                    'hms-networks' => 'HMS Networks (Industrial Communication)',
+                    'prosoft-technology' => 'ProSoft Technology (Industrial Connectivity)',
+                ],
+                'default_value' => 'kirloskar-pneumatic',
+            ],
+            [
+                'key' => 'field_product_solution',
+                'label' => 'Solution / Category Division',
+                'name' => 'solution',
+                'type' => 'select',
+                'instructions' => 'Which overarching division does this product belong to?',
+                'required' => 1,
+                'choices' => [
+                    'air-gas-solutions' => 'Air & Gas Solutions',
+                    'refrigeration-hvac-solutions' => 'Refrigeration & HVAC Solutions',
+                    'automation-control' => 'Automation & Control Solutions',
+                    'non-metallic-solutions' => 'Non-Metallic Solutions',
+                    'fire-pump-solutions' => 'Fire Pump Solutions',
+                ],
+                'default_value' => 'air-gas-solutions',
+            ],
+            [
+                'key' => 'field_product_subcategory',
+                'label' => 'Product Sub-Category / Filter ID',
+                'name' => 'subcategory',
+                'type' => 'text',
+                'instructions' => 'e.g. controllers, drives, networks, screw, reciprocating, packages, chillers, piping, all',
+                'default_value' => 'all',
+            ],
+            [
+                'key' => 'field_product_title_en',
+                'label' => 'Product Title (English)',
+                'name' => 'title_en',
+                'type' => 'text',
+                'required' => 1,
+                'instructions' => 'Type English title. Arabic will be automatically fetched on save if left empty!',
+            ],
+            [
+                'key' => 'field_product_title_ar',
+                'label' => 'Product Title (Arabic / العربية)',
+                'name' => 'title_ar',
+                'type' => 'text',
+                'instructions' => 'Leave empty to auto-fetch Arabic translation automatically, or enter custom Arabic.',
+            ],
+            [
+                'key' => 'field_product_specs_en',
+                'label' => 'Specifications & Features (English)',
+                'name' => 'specs_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Capacity: 22 to 1047 cfm | Pressure Range: 7.5 to 13 kg/cm²',
+            ],
+            [
+                'key' => 'field_product_specs_ar',
+                'label' => 'Specifications & Features (Arabic / العربية)',
+                'name' => 'specs_ar',
+                'type' => 'text',
+                'instructions' => 'Leave empty to auto-fetch Arabic translation automatically.',
+            ],
+            [
+                'key' => 'field_product_description_en',
+                'label' => 'Description (English)',
+                'name' => 'description_en',
+                'type' => 'textarea',
+                'rows' => 4,
+                'instructions' => 'Type English description. Arabic will be automatically fetched on save if left empty!',
+            ],
+            [
+                'key' => 'field_product_description_ar',
+                'label' => 'Description (Arabic / العربية)',
+                'name' => 'description_ar',
+                'type' => 'textarea',
+                'rows' => 4,
+                'instructions' => 'Leave empty to auto-fetch Arabic translation automatically.',
+            ],
+            [
+                'key' => 'field_product_brochure',
+                'label' => 'Product Brochure / Data Sheet (PDF)',
+                'name' => 'brochure_pdf',
+                'type' => 'file',
+                'return_format' => 'url',
+                'mime_types' => 'pdf',
+            ],
+        ],
+        'location' => [
+            [
+                [
+                    'param' => 'post_type',
+                    'operator' => '==',
+                    'value' => 'product',
+                ],
+            ],
+        ],
+        'show_in_graphql' => 1,
+        'graphql_field_name' => 'productFields',
+    ]);
+
+    // 4.2 EVENT FIELDS
     acf_add_local_field_group([
         'key' => 'group_event_fields',
         'title' => 'Event Details (Bilingual)',
@@ -114,7 +266,7 @@ add_action('acf/init', function() {
                 'label' => 'Title (Arabic)',
                 'name' => 'title_ar',
                 'type' => 'text',
-                'required' => 1,
+                'instructions' => 'Leave empty to auto-translate from English.',
             ],
             [
                 'key' => 'field_event_date_en',
@@ -129,8 +281,7 @@ add_action('acf/init', function() {
                 'label' => 'Date (Arabic)',
                 'name' => 'date_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. ١٥ فبراير ٢٠٢٦',
-                'required' => 1,
+                'instructions' => 'Leave empty to auto-translate from English.',
             ],
             [
                 'key' => 'field_event_location_en',
@@ -145,8 +296,7 @@ add_action('acf/init', function() {
                 'label' => 'Location (Arabic)',
                 'name' => 'location_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. الجبيل، المملكة العربية السعودية',
-                'required' => 1,
+                'instructions' => 'Leave empty to auto-translate from English.',
             ],
             [
                 'key' => 'field_event_description_en',
@@ -161,6 +311,7 @@ add_action('acf/init', function() {
                 'name' => 'description_ar',
                 'type' => 'textarea',
                 'rows' => 4,
+                'instructions' => 'Leave empty to auto-translate from English.',
             ],
         ],
         'location' => [
@@ -176,7 +327,7 @@ add_action('acf/init', function() {
         'graphql_field_name' => 'eventFields',
     ]);
 
-    // 3.2 CAREER FIELDS
+    // 4.3 CAREER FIELDS
     acf_add_local_field_group([
         'key' => 'group_career_fields',
         'title' => 'Career / Job Opening Details (Bilingual)',
@@ -209,7 +360,7 @@ add_action('acf/init', function() {
                 'label' => 'Job Title (Arabic)',
                 'name' => 'title_ar',
                 'type' => 'text',
-                'required' => 1,
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_department_en',
@@ -223,7 +374,7 @@ add_action('acf/init', function() {
                 'label' => 'Department (Arabic)',
                 'name' => 'department_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. الهندسة والخدمات الفنية',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_designation_en',
@@ -237,7 +388,7 @@ add_action('acf/init', function() {
                 'label' => 'Designation (Arabic)',
                 'name' => 'designation_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. مدير مشروع',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_location_en',
@@ -251,7 +402,7 @@ add_action('acf/init', function() {
                 'label' => 'Location (Arabic)',
                 'name' => 'location_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. الدمام، المملكة العربية السعودية',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_experience_en',
@@ -265,7 +416,7 @@ add_action('acf/init', function() {
                 'label' => 'Experience (Arabic)',
                 'name' => 'experience_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. ٥-٨ سنوات',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_employment_type_en',
@@ -279,7 +430,7 @@ add_action('acf/init', function() {
                 'label' => 'Employment Type (Arabic)',
                 'name' => 'employment_type_ar',
                 'type' => 'text',
-                'default_value' => 'دوام كامل',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_about_role_en',
@@ -294,6 +445,7 @@ add_action('acf/init', function() {
                 'name' => 'about_role_ar',
                 'type' => 'textarea',
                 'rows' => 4,
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_responsibilities_en',
@@ -301,7 +453,6 @@ add_action('acf/init', function() {
                 'name' => 'responsibilities_en',
                 'type' => 'textarea',
                 'rows' => 5,
-                'instructions' => 'Put each bullet point on a new line',
             ],
             [
                 'key' => 'field_job_responsibilities_ar',
@@ -309,7 +460,7 @@ add_action('acf/init', function() {
                 'name' => 'responsibilities_ar',
                 'type' => 'textarea',
                 'rows' => 5,
-                'instructions' => 'ضع كل نقطة في سطر منفصل',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_job_requirements_en',
@@ -317,7 +468,6 @@ add_action('acf/init', function() {
                 'name' => 'requirements_en',
                 'type' => 'textarea',
                 'rows' => 5,
-                'instructions' => 'Put each bullet point on a new line',
             ],
             [
                 'key' => 'field_job_requirements_ar',
@@ -325,7 +475,7 @@ add_action('acf/init', function() {
                 'name' => 'requirements_ar',
                 'type' => 'textarea',
                 'rows' => 5,
-                'instructions' => 'ضع كل نقطة في سطر منفصل',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
         ],
         'location' => [
@@ -341,89 +491,7 @@ add_action('acf/init', function() {
         'graphql_field_name' => 'careerFields',
     ]);
 
-    // 3.3 PRODUCT FIELDS
-    acf_add_local_field_group([
-        'key' => 'group_product_fields',
-        'title' => 'Product Details (Bilingual)',
-        'fields' => [
-            [
-                'key' => 'field_product_category',
-                'label' => 'Category',
-                'name' => 'category',
-                'type' => 'select',
-                'choices' => [
-                    'mechanical' => 'Air & Gas / Mechanical Solutions',
-                    'cooling' => 'Refrigeration & HVAC',
-                    'automation' => 'Automation & Control',
-                    'materials' => 'Non-Metallic Solutions',
-                ],
-                'default_value' => 'mechanical',
-            ],
-            [
-                'key' => 'field_product_title_en',
-                'label' => 'Title (English)',
-                'name' => 'title_en',
-                'type' => 'text',
-                'required' => 1,
-            ],
-            [
-                'key' => 'field_product_title_ar',
-                'label' => 'Title (Arabic)',
-                'name' => 'title_ar',
-                'type' => 'text',
-                'required' => 1,
-            ],
-            [
-                'key' => 'field_product_description_en',
-                'label' => 'Description (English)',
-                'name' => 'description_en',
-                'type' => 'textarea',
-                'rows' => 4,
-            ],
-            [
-                'key' => 'field_product_description_ar',
-                'label' => 'Description (Arabic)',
-                'name' => 'description_ar',
-                'type' => 'textarea',
-                'rows' => 4,
-            ],
-            [
-                'key' => 'field_product_features_en',
-                'label' => 'Features (English - One per line)',
-                'name' => 'features_en',
-                'type' => 'textarea',
-                'rows' => 4,
-            ],
-            [
-                'key' => 'field_product_features_ar',
-                'label' => 'Features (Arabic - One per line)',
-                'name' => 'features_ar',
-                'type' => 'textarea',
-                'rows' => 4,
-            ],
-            [
-                'key' => 'field_product_brochure',
-                'label' => 'Product Brochure (PDF)',
-                'name' => 'brochure_pdf',
-                'type' => 'file',
-                'return_format' => 'url',
-                'mime_types' => 'pdf',
-            ],
-        ],
-        'location' => [
-            [
-                [
-                    'param' => 'post_type',
-                    'operator' => '==',
-                    'value' => 'product',
-                ],
-            ],
-        ],
-        'show_in_graphql' => 1,
-        'graphql_field_name' => 'productFields',
-    ]);
-
-    // 3.4 BLOG (POST) ARABIC & EXTRA FIELDS
+    // 4.4 BLOG (POST) ARABIC & EXTRA FIELDS
     acf_add_local_field_group([
         'key' => 'group_blog_fields',
         'title' => 'Blog Bilingual Fields (English & Arabic)',
@@ -440,13 +508,14 @@ add_action('acf/init', function() {
                 'label' => 'Tag / Category (Arabic)',
                 'name' => 'tag_ar',
                 'type' => 'text',
-                'instructions' => 'e.g. التحول الرقمي، الروبوتات',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_blog_title_ar',
                 'label' => 'Title (Arabic)',
                 'name' => 'title_ar',
                 'type' => 'text',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
             [
                 'key' => 'field_blog_excerpt_en',
@@ -461,12 +530,7 @@ add_action('acf/init', function() {
                 'name' => 'excerpt_ar',
                 'type' => 'textarea',
                 'rows' => 3,
-            ],
-            [
-                'key' => 'field_blog_content_ar',
-                'label' => 'Full Article (Arabic)',
-                'name' => 'content_ar',
-                'type' => 'wysiwyg',
+                'instructions' => 'Leave empty to auto-translate.',
             ],
         ],
         'location' => [
@@ -483,3 +547,176 @@ add_action('acf/init', function() {
     ]);
 });
 
+/**
+ * 5. Automatic Translation Hook on Post Save
+ * Whenever any item is saved in WordPress, if the user typed in English,
+ * it automatically fetches the exact Arabic translation!
+ */
+add_action('acf/save_post', function($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    if (wp_is_post_revision($post_id)) {
+        return;
+    }
+    
+    $post_type = get_post_type($post_id);
+    
+    // 5.1 Translate Product Fields
+    if ($post_type === 'product') {
+        $title_en = get_field('title_en', $post_id);
+        $title_ar = get_field('title_ar', $post_id);
+        if (!empty($title_en) && empty($title_ar)) {
+            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
+        }
+        
+        $specs_en = get_field('specs_en', $post_id);
+        $specs_ar = get_field('specs_ar', $post_id);
+        if (!empty($specs_en) && empty($specs_ar)) {
+            update_field('specs_ar', mvgl_auto_translate_to_arabic($specs_en), $post_id);
+        }
+        
+        $desc_en = get_field('description_en', $post_id);
+        $desc_ar = get_field('description_ar', $post_id);
+        if (!empty($desc_en) && empty($desc_ar)) {
+            update_field('description_ar', mvgl_auto_translate_to_arabic($desc_en), $post_id);
+        }
+    }
+    
+    // 5.2 Translate Event Fields
+    if ($post_type === 'event') {
+        $title_en = get_field('title_en', $post_id);
+        $title_ar = get_field('title_ar', $post_id);
+        if (!empty($title_en) && empty($title_ar)) {
+            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
+        }
+        
+        $date_en = get_field('date_en', $post_id);
+        $date_ar = get_field('date_ar', $post_id);
+        if (!empty($date_en) && empty($date_ar)) {
+            update_field('date_ar', mvgl_auto_translate_to_arabic($date_en), $post_id);
+        }
+        
+        $loc_en = get_field('location_en', $post_id);
+        $loc_ar = get_field('location_ar', $post_id);
+        if (!empty($loc_en) && empty($loc_ar)) {
+            update_field('location_ar', mvgl_auto_translate_to_arabic($loc_en), $post_id);
+        }
+        
+        $desc_en = get_field('description_en', $post_id);
+        $desc_ar = get_field('description_ar', $post_id);
+        if (!empty($desc_en) && empty($desc_ar)) {
+            update_field('description_ar', mvgl_auto_translate_to_arabic($desc_en), $post_id);
+        }
+    }
+    
+    // 5.3 Translate Career Fields
+    if ($post_type === 'career') {
+        $simple_fields = ['title', 'department', 'designation', 'location', 'experience', 'employment_type', 'about_role', 'responsibilities', 'requirements'];
+        foreach ($simple_fields as $f) {
+            $en = get_field($f . '_en', $post_id);
+            $ar = get_field($f . '_ar', $post_id);
+            if (!empty($en) && empty($ar)) {
+                update_field($f . '_ar', mvgl_auto_translate_to_arabic($en), $post_id);
+            }
+        }
+    }
+    
+    // 5.4 Translate Blog Fields
+    if ($post_type === 'post') {
+        $tag_en = get_field('tag_en', $post_id);
+        $tag_ar = get_field('tag_ar', $post_id);
+        if (!empty($tag_en) && empty($tag_ar)) {
+            update_field('tag_ar', mvgl_auto_translate_to_arabic($tag_en), $post_id);
+        }
+        
+        $title_ar = get_field('title_ar', $post_id);
+        if (empty($title_ar)) {
+            $post_title = get_the_title($post_id);
+            if (!empty($post_title)) {
+                update_field('title_ar', mvgl_auto_translate_to_arabic($post_title), $post_id);
+            }
+        }
+        
+        $excerpt_en = get_field('excerpt_en', $post_id);
+        $excerpt_ar = get_field('excerpt_ar', $post_id);
+        if (!empty($excerpt_en) && empty($excerpt_ar)) {
+            update_field('excerpt_ar', mvgl_auto_translate_to_arabic($excerpt_en), $post_id);
+        }
+    }
+}, 20);
+
+/**
+ * 6. Add Instant "✨ Auto-Translate to Arabic" Button in WordPress Admin UI
+ */
+add_action('admin_footer', function() {
+    global $post;
+    if (!$post) return;
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var publishBox = document.getElementById('major-publishing-actions') || document.querySelector('.edit-post-header__settings');
+        if (!publishBox) return;
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'button button-secondary';
+        btn.innerHTML = '✨ Auto-Translate to Arabic';
+        btn.style.margin = '8px 0';
+        btn.style.width = '100%';
+        btn.style.fontWeight = 'bold';
+        btn.style.color = '#1e3a8a';
+        btn.style.borderColor = '#3b82f6';
+
+        btn.onclick = async function() {
+            btn.innerHTML = '⏳ Translating to Arabic...';
+            btn.disabled = true;
+
+            async function translate(val) {
+                if (!val || !val.trim()) return '';
+                try {
+                    var res = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(val.trim()));
+                    var json = await res.json();
+                    if (json && json[0]) {
+                        return json[0].map(function(s) { return s[0]; }).join('');
+                    }
+                } catch(e) {}
+                return val;
+            }
+
+            var pairs = [
+                { en: 'title_en', ar: 'title_ar' },
+                { en: 'specs_en', ar: 'specs_ar' },
+                { en: 'description_en', ar: 'description_ar' },
+                { en: 'location_en', ar: 'location_ar' },
+                { en: 'date_en', ar: 'date_ar' },
+                { en: 'department_en', ar: 'department_ar' },
+                { en: 'designation_en', ar: 'designation_ar' },
+                { en: 'about_role_en', ar: 'about_role_ar' },
+                { en: 'responsibilities_en', ar: 'responsibilities_ar' },
+                { en: 'requirements_en', ar: 'requirements_ar' },
+                { en: 'tag_en', ar: 'tag_ar' },
+                { en: 'excerpt_en', ar: 'excerpt_ar' }
+            ];
+
+            for (var i = 0; i < pairs.length; i++) {
+                var enEl = document.querySelector('[name="acf[' + pairs[i].en + ']"]') || document.querySelector('[name*="' + pairs[i].en + '"]');
+                var arEl = document.querySelector('[name="acf[' + pairs[i].ar + ']"]') || document.querySelector('[name*="' + pairs[i].ar + '"]');
+                if (enEl && arEl && enEl.value && (!arEl.value || arEl.value === enEl.value)) {
+                    arEl.value = await translate(enEl.value);
+                }
+            }
+
+            btn.innerHTML = '✅ Arabic Translated!';
+            setTimeout(function() {
+                btn.innerHTML = '✨ Auto-Translate to Arabic';
+                btn.disabled = false;
+            }, 3000);
+        };
+
+        var container = document.getElementById('submitpost') || publishBox;
+        container.insertBefore(btn, container.firstChild);
+    });
+    </script>
+    <?php
+});

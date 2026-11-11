@@ -252,13 +252,18 @@ export async function getProducts(): Promise<Solution[]> {
   if (data?.products?.nodes && data.products.nodes.length > 0) {
     return data.products.nodes.map((node) => {
       const f = node.productFields || {}
+      const rawCategory = Array.isArray(f.category) ? f.category[0] : f.category
+      const category = (typeof rawCategory === 'string' && rawCategory.trim()) ? rawCategory.trim() : 'mechanical'
+      const titleEn = f.titleEn || node.slug || 'Product'
+      const titleAr = f.titleAr || titleEn
+
       return {
         id: node.slug || node.id,
         slug: node.slug || node.id,
-        category: (f.category as any) || 'mechanical',
+        category: category as any,
         title: {
-          en: f.titleEn || 'Product',
-          ar: f.titleAr || f.titleEn || 'منتج',
+          en: titleEn,
+          ar: titleAr,
         },
         description: {
           en: f.descriptionEn || '',
@@ -278,6 +283,114 @@ export async function getProducts(): Promise<Solution[]> {
 
   // Fallback to static solutions
   return solutionsData
+}
+
+export interface PartnerProduct {
+  id: string | number
+  slug: string
+  partner: string
+  solution: string
+  category: string
+  tag: string
+  title: {
+    en: string
+    ar: string
+  }
+  desc: {
+    en: string
+    ar: string
+  }
+  specs: {
+    en: string
+    ar: string
+  }
+  image: string
+  brochureUrl?: string
+}
+
+/**
+ * Fetch products assigned to a specific partner from WordPress
+ */
+export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerProduct[]> {
+  const query = `
+    query GetPartnerProducts {
+      products(first: 200) {
+        nodes {
+          id
+          slug
+          title
+          featuredImage {
+            node {
+              sourceUrl
+            }
+          }
+          productFields {
+            partner
+            solution
+            subcategory
+            titleEn
+            titleAr
+            specsEn
+            specsAr
+            descriptionEn
+            descriptionAr
+            brochurePdf {
+              node {
+                mediaItemUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  `
+
+  const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
+  if (data?.products?.nodes && data.products.nodes.length > 0) {
+    const all: PartnerProduct[] = data.products.nodes.map((node) => {
+      const f = node.productFields || {}
+      const rawPartner = Array.isArray(f.partner) ? f.partner[0] : f.partner
+      const partner = typeof rawPartner === 'string' ? rawPartner.trim().toLowerCase() : ''
+      const rawSolution = Array.isArray(f.solution) ? f.solution[0] : f.solution
+      const solution = typeof rawSolution === 'string' ? rawSolution.trim().toLowerCase() : ''
+      const subcategory = typeof f.subcategory === 'string' && f.subcategory.trim() ? f.subcategory.trim().toLowerCase() : 'all'
+
+      const titleEn = f.titleEn || node.title || 'Product'
+      const titleAr = f.titleAr || titleEn
+
+      return {
+        id: node.slug || node.id,
+        slug: node.slug || node.id,
+        partner,
+        solution,
+        category: subcategory,
+        tag: partner.replace('-', ' ').toUpperCase(),
+        title: {
+          en: titleEn,
+          ar: titleAr,
+        },
+        desc: {
+          en: f.descriptionEn || '',
+          ar: f.descriptionAr || f.descriptionEn || '',
+        },
+        specs: {
+          en: f.specsEn || '',
+          ar: f.specsAr || f.specsEn || '',
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+        brochureUrl: f.brochurePdf?.node?.mediaItemUrl || undefined,
+      }
+    })
+
+    if (partnerSlug) {
+      return all.filter((p) => p.partner === partnerSlug.toLowerCase())
+    }
+    return all
+  }
+
+  return []
 }
 
 /**
