@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { partnersData } from '../data/partners'
-import { getPartnerProducts, type PartnerProduct } from '../services/graphql'
+import { getPartnerProducts, getCachedPartnerProducts, type PartnerProduct } from '../services/graphql'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
 export default function PartnerDetail() {
@@ -15,10 +15,12 @@ export default function PartnerDetail() {
   const [eppFilter, setEppFilter] = useState('all')
   const [sppFilter, setSppFilter] = useState('all')
   const [prosoftFilter, setProsoftFilter] = useState('all')
-  const [cmsProducts, setCmsProducts] = useState<PartnerProduct[]>([])
 
   const activeSlug = partnerSlug || slug || ''
   const partner = partnersData.find((p) => p.slug === activeSlug)
+  const [cmsProducts, setCmsProducts] = useState<PartnerProduct[]>(() =>
+    getCachedPartnerProducts(activeSlug)
+  )
 
   useEffect(() => {
     let mounted = true
@@ -562,7 +564,7 @@ export default function PartnerDetail() {
                       image: '/AUTOMATION CONTROL/ROCKWELL AUTOMATION/Relays and Timers.png'
                     }
                   ])
-                    .filter((prod) => rockwellFilter === 'all' || prod.category === rockwellFilter)
+                    .filter((prod) => rockwellFilter === 'all' || prod.category === rockwellFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -689,7 +691,7 @@ export default function PartnerDetail() {
                       image: '/PRODUCTS/SPP PUMPS/PRE-PACKAGED PUMP HOUSES.jpg'
                     }
                   ])
-                    .filter((prod) => sppFilter === 'all' || prod.category === sppFilter)
+                    .filter((prod) => sppFilter === 'all' || prod.category === sppFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -890,7 +892,7 @@ export default function PartnerDetail() {
                       image: '/AIR & GAS SOLUTIONS/Screw Compressor Packages.png'
                     }
                   ])
-                    .filter((prod) => kirloskarFilter === 'all' || prod.category === kirloskarFilter)
+                    .filter((prod) => kirloskarFilter === 'all' || prod.category === kirloskarFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -1125,7 +1127,7 @@ export default function PartnerDetail() {
                       image: '/PRODUCTS/KIRLOSKAR CHILLERS/Water to Water Heat Pumps.jpg'
                     }
                   ])
-                    .filter((prod) => chillersFilter === 'all' || prod.category === chillersFilter)
+                    .filter((prod) => chillersFilter === 'all' || prod.category === chillersFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -1370,7 +1372,7 @@ export default function PartnerDetail() {
                       image: '/AUTOMATION CONTROL/HMS/Redlion By HMS.png'
                     }
                   ])
-                    .filter((prod) => hmsFilter === 'all' || prod.category === hmsFilter)
+                    .filter((prod) => hmsFilter === 'all' || prod.category === hmsFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -1797,7 +1799,7 @@ export default function PartnerDetail() {
                       image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80'
                     }
                   ])
-                    .filter((prod) => prosoftFilter === 'all' || prod.category === prosoftFilter)
+                    .filter((prod) => prosoftFilter === 'all' || prod.category === prosoftFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}
@@ -2036,7 +2038,7 @@ export default function PartnerDetail() {
                       image: '/PRODUCTS/EPP COMPOSITE/Wind Turbine Components.jpg'
                     }
                   ])
-                    .filter((prod) => eppFilter === 'all' || prod.category === eppFilter)
+                    .filter((prod) => eppFilter === 'all' || prod.category === eppFilter || prod.category === 'all')
                     .map((prod, idx) => (
                       <div
                         key={idx}

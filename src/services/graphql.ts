@@ -308,8 +308,34 @@ export interface PartnerProduct {
   brochureUrl?: string
 }
 
+// In-Memory and LocalStorage Cache for 0ms Instant Rendering
+const CACHE_KEY_PRODUCTS = 'mvgl_cache_partner_products'
+let inMemoryProducts: PartnerProduct[] | null = null
+
 /**
- * Fetch products assigned to a specific partner from WordPress
+ * Synchronous instant cache getter (0ms latency, zero delay)
+ */
+export function getCachedPartnerProducts(partnerSlug?: string): PartnerProduct[] {
+  if (!inMemoryProducts) {
+    try {
+      const stored = localStorage.getItem(CACHE_KEY_PRODUCTS)
+      if (stored) {
+        inMemoryProducts = JSON.parse(stored)
+      }
+    } catch {}
+  }
+
+  if (inMemoryProducts && inMemoryProducts.length > 0) {
+    if (partnerSlug) {
+      return inMemoryProducts.filter((p) => p.partner === partnerSlug.toLowerCase())
+    }
+    return inMemoryProducts
+  }
+  return []
+}
+
+/**
+ * Fetch products assigned to a specific partner from WordPress with instant cache & background revalidation
  */
 export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerProduct[]> {
   const query = `
@@ -384,13 +410,29 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
       }
     })
 
+    // Update in-memory and persistent cache
+    inMemoryProducts = all
+    try {
+      localStorage.setItem(CACHE_KEY_PRODUCTS, JSON.stringify(all))
+    } catch {}
+
     if (partnerSlug) {
       return all.filter((p) => p.partner === partnerSlug.toLowerCase())
     }
     return all
   }
 
-  return []
+  return getCachedPartnerProducts(partnerSlug)
+}
+
+/**
+ * Preload all CMS data in background when site opens for 0ms transitions
+ */
+export function preloadCmsData() {
+  getPartnerProducts()
+  getEvents()
+  getCareers()
+  getBlogs()
 }
 
 /**

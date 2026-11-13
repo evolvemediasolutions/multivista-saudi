@@ -24,6 +24,7 @@ import NonMetallicSolutions from './pages/NonMetallicSolutions'
 import FirePumpSolutions from './pages/FirePumpSolutions'
 import JobDetail from './pages/JobDetail'
 import { useEffect } from 'react'
+import { preloadCmsData } from './services/graphql'
 
 function RootRedirect() {
   const { locale } = useLanguage()
@@ -33,6 +34,10 @@ function RootRedirect() {
 function LocaleWrapper({ children }: { children: React.ReactNode }) {
   const { locale, setLocale } = useLanguage()
   const { lang } = useParams<{ lang: 'en' | 'ar' }>()
+
+  useEffect(() => {
+    preloadCmsData()
+  }, [])
 
   useEffect(() => {
     if (lang && (lang === 'en' || lang === 'ar') && lang !== locale) {
