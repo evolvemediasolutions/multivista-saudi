@@ -274,26 +274,35 @@ export default function PartnerDetail() {
   }, [activeSlug])
 
   const mergeWithCms = (staticList: any[]) => {
-    const formattedCms = cmsProducts.map((p) => ({
-      id: p.id,
-      category: p.category || 'all',
-      tag: partner?.name?.toUpperCase() || p.tag,
-      title: {
-        en: p.title?.en || 'Product',
-        ar: p.title?.ar || p.title?.en || 'منتج',
-      },
-      desc: {
-        en: p.desc?.en || '',
-        ar: p.desc?.ar || p.desc?.en || '',
-      },
-      specs: {
-        en: p.specs?.en || '',
-        ar: p.specs?.ar || p.specs?.en || '',
-      },
-      image: p.image,
-      exploreUrl: p.exploreUrl || p.brochureUrl || '',
-      brochureUrl: p.brochureUrl,
-    }))
+    const formattedCms = cmsProducts.map((p) => {
+      const cleanTitle = (p.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+      const matchingStatic = staticList.find(
+        (s) => (s.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, '') === cleanTitle
+      )
+      const hasRealCmsImage = p.image && !p.image.includes('unsplash.com/photo-1581092160607')
+      const finalImage = hasRealCmsImage ? p.image : (matchingStatic?.image || p.image)
+
+      return {
+        id: p.id,
+        category: p.category || 'all',
+        tag: partner?.name?.toUpperCase() || p.tag,
+        title: {
+          en: p.title?.en || 'Product',
+          ar: p.title?.ar || p.title?.en || 'منتج',
+        },
+        desc: {
+          en: p.desc?.en || '',
+          ar: p.desc?.ar || p.desc?.en || '',
+        },
+        specs: {
+          en: p.specs?.en || '',
+          ar: p.specs?.ar || p.specs?.en || '',
+        },
+        image: finalImage,
+        exploreUrl: p.exploreUrl || p.brochureUrl || '',
+        brochureUrl: p.brochureUrl,
+      }
+    })
 
     // Deduplication & Override:
     // When a product with the same English title exists in WordPress CMS,

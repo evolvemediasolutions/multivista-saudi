@@ -17,7 +17,7 @@ export const WP_GRAPHQL_URL =
   import.meta.env.VITE_WP_GRAPHQL_URL || 'https://saudicms.multivistaprintsolutions.com/graphql'
 
 /**
- * Generic GraphQL Fetcher with robust error handling, cache-busting, and fallback
+ * Generic GraphQL Fetcher with robust error handling and cache-busting
  */
 export async function fetchGraphQL<T = any>(query: string, variables = {}): Promise<T | null> {
   try {
@@ -26,10 +26,7 @@ export async function fetchGraphQL<T = any>(query: string, variables = {}): Prom
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
       },
-      cache: 'no-store',
       body: JSON.stringify({ query, variables }),
     })
 
@@ -239,8 +236,8 @@ export async function getProducts(): Promise<Solution[]> {
             titleAr
             descriptionEn
             descriptionAr
-            featuresEn
-            featuresAr
+            specsEn
+            specsAr
             brochurePdf {
               node {
                 mediaItemUrl
@@ -252,12 +249,7 @@ export async function getProducts(): Promise<Solution[]> {
     }
   `
 
-  let data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
-  if (!data?.products) {
-    // Graceful fallback if exploreUrl is not yet registered on the WordPress backend
-    const fallbackQuery = query.replace('exploreUrl', '')
-    data = await fetchGraphQL<{ products: { nodes: any[] } }>(fallbackQuery)
-  }
+  const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
   if (data?.products?.nodes && data.products.nodes.length > 0) {
     return data.products.nodes.map((node) => {
       const f = node.productFields || {}
@@ -279,8 +271,8 @@ export async function getProducts(): Promise<Solution[]> {
           ar: f.descriptionAr || f.descriptionEn || '',
         },
         features: {
-          en: parseLines(f.featuresEn),
-          ar: parseLines(f.featuresAr),
+          en: parseLines(f.specsEn),
+          ar: parseLines(f.specsAr),
         },
         image:
           node.featuredImage?.node?.sourceUrl ||
@@ -370,7 +362,6 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
             specsAr
             descriptionEn
             descriptionAr
-            exploreUrl
             brochurePdf {
               node {
                 mediaItemUrl
@@ -382,12 +373,7 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
     }
   `
 
-  let data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
-  if (!data?.products) {
-    // Graceful fallback if exploreUrl is not yet registered on the WordPress backend
-    const fallbackQuery = query.replace('exploreUrl', '')
-    data = await fetchGraphQL<{ products: { nodes: any[] } }>(fallbackQuery)
-  }
+  const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
   if (data?.products?.nodes && data.products.nodes.length > 0) {
     const all: PartnerProduct[] = data.products.nodes.map((node) => {
       const f = node.productFields || {}
