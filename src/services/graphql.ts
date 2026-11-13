@@ -306,6 +306,7 @@ export interface PartnerProduct {
   }
   image: string
   brochureUrl?: string
+  exploreUrl?: string
 }
 
 // In-Memory and LocalStorage Cache for 0ms Instant Rendering
@@ -360,6 +361,7 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
             specsAr
             descriptionEn
             descriptionAr
+            exploreUrl
             brochurePdf {
               node {
                 mediaItemUrl
@@ -407,6 +409,7 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
           node.featuredImage?.node?.sourceUrl ||
           'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
         brochureUrl: f.brochurePdf?.node?.mediaItemUrl || undefined,
+        exploreUrl: f.exploreUrl || undefined,
       }
     })
 

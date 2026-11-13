@@ -232,6 +232,13 @@ add_action('acf/init', function() {
                 'instructions' => 'Leave empty to auto-fetch Arabic translation automatically.',
             ],
             [
+                'key' => 'field_product_explore_url',
+                'label' => 'Explore Product Link (Custom URL)',
+                'name' => 'explore_url',
+                'type' => 'url',
+                'instructions' => 'Custom URL to open when user clicks "Explore Product" in the popup (e.g. https://www.rockwellautomation.com/... or a landing page). If left empty, falls back to the brochure PDF or contact inquiry.',
+            ],
+            [
                 'key' => 'field_product_brochure',
                 'label' => 'Product Brochure / Data Sheet (PDF)',
                 'name' => 'brochure_pdf',
@@ -724,3 +731,101 @@ add_action('admin_footer', function() {
     </script>
     <?php
 });
+
+/**
+ * 7. One-Click Importer to Seed All 60 Frontend Products into WordPress
+ */
+add_action('admin_menu', function() {
+    add_submenu_page(
+        'edit.php?post_type=product',
+        'Import Frontend Products',
+        '📥 Import All Products',
+        'manage_options',
+        'mvgl-import-products',
+        'mvgl_render_import_products_page'
+    );
+});
+
+function mvgl_render_import_products_page() {
+    $seed_file = __DIR__ . '/frontend-products-seed.json';
+    $message = '';
+    
+    if (isset($_POST['mvgl_do_import']) && check_admin_referer('mvgl_import_nonce')) {
+        if (!file_exists($seed_file)) {
+            $message = '<div class="notice notice-error"><p>Seed file frontend-products-seed.json not found in plugin directory.</p></div>';
+        } else {
+            $json_data = file_get_contents($seed_file);
+            $products = json_decode($json_data, true);
+            $imported = 0;
+            $updated = 0;
+            
+            if (is_array($products)) {
+                foreach ($products as $prod) {
+                    $title_en = sanitize_text_field($prod['title_en'] ?? '');
+                    if (empty($title_en)) continue;
+                    
+                    // Check if product already exists by title
+                    $existing = get_page_by_title($title_en, OBJECT, 'product');
+                    if ($existing) {
+                        $post_id = $existing->ID;
+                        $updated++;
+                    } else {
+                        $post_id = wp_insert_post([
+                            'post_title' => $title_en,
+                            'post_type' => 'product',
+                            'post_status' => 'publish',
+                        ]);
+                        $imported++;
+                    }
+                    
+                    if ($post_id && !is_wp_error($post_id)) {
+                        update_field('partner', $prod['partner'] ?? '', $post_id);
+                        update_field('solution', $prod['solution'] ?? '', $post_id);
+                        update_field('subcategory', $prod['category'] ?? 'all', $post_id);
+                        update_field('title_en', $title_en, $post_id);
+                        update_field('title_ar', $prod['title_ar'] ?? '', $post_id);
+                        update_field('specs_en', $prod['specs_en'] ?? '', $post_id);
+                        update_field('specs_ar', $prod['specs_ar'] ?? '', $post_id);
+                        update_field('description_en', $prod['description_en'] ?? '', $post_id);
+                        update_field('description_ar', $prod['description_ar'] ?? '', $post_id);
+                        update_field('explore_url', $prod['explore_url'] ?? '', $post_id);
+                    }
+                }
+                $message = '<div class="notice notice-success is-dismissible" style="padding:12px; margin:16px 0;"><p style="font-size:15px;">🎉 <strong>Import Completed Successfully!</strong> ' . $imported . ' products created, ' . $updated . ' products updated. All 60 products can now be edited under <strong>Products &gt; All Products</strong>.</p></div>';
+            }
+        }
+    }
+    
+    ?>
+    <div class="wrap" style="max-width: 900px; padding: 20px 0;">
+        <h1>📥 Import Frontend Products to WordPress CMS</h1>
+        <div style="background:#fff; border:1px solid #ccd0d4; padding:24px; border-radius:10px; margin-top:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <h2 style="margin-top:0;">Manage All Frontend Products Directly From WordPress</h2>
+            <p style="font-size:14px; line-height:1.6; color:#475569;">
+                This tool automatically imports all <strong>60 industrial products</strong> currently hardcoded in the frontend code into your WordPress CMS as full, editable <code>Product</code> posts with their categories, partner assignments, and bilingual English &amp; Arabic specifications.
+            </p>
+            <ul style="list-style:disc; margin-left:24px; color:#475569; font-size:14px; line-height:1.7;">
+                <li><strong>Rockwell Automation</strong> (12 Controllers, Drives, Networks)</li>
+                <li><strong>SPP Pumps</strong> (Split Case &amp; End Suction Fire Pumps)</li>
+                <li><strong>Kirloskar Pneumatic</strong> (6 Gas Compressors &amp; Packages)</li>
+                <li><strong>Kirloskar Chillers</strong> (7 Water &amp; Air Cooled Chillers)</li>
+                <li><strong>HMS Networks</strong> (7 Anybus Gateways &amp; Routers)</li>
+                <li><strong>ProSoft Technology</strong> (18 In-Chassis Modules &amp; Gateways)</li>
+                <li><strong>EPP Composites</strong> (8 FRP/GRP Structural Solutions)</li>
+            </ul>
+            <p style="font-size:14px; color:#475569;">
+                Once imported, you can edit specifications, change titles, add custom <strong>"Explore Product"</strong> redirect links, and update descriptions directly from WordPress!
+            </p>
+            
+            <?php echo $message; ?>
+            
+            <form method="post" style="margin-top:24px;">
+                <?php wp_nonce_field('mvgl_import_nonce'); ?>
+                <p>
+                    <input type="submit" name="mvgl_do_import" class="button button-primary button-hero" value="🚀 Import / Sync All 60 Frontend Products to CMS" onclick="return confirm('Import all 60 frontend products into WordPress? Existing products with matching titles will be updated safely without duplicates.');" style="font-weight:bold; height:46px; line-height:44px; padding:0 28px;">
+                </p>
+            </form>
+        </div>
+    </div>
+    <?php
+}

@@ -158,9 +158,13 @@ function ProductModal({ product, locale, dir, onClose, localizedPath }: ProductM
         <div className="flex flex-wrap items-center justify-between gap-3 pt-6 mt-4 border-t border-slate-100">
           <div className="flex flex-wrap items-center gap-4">
             <a
-              href={product.brochureUrl || `${localizedPath('/contact')}?inquiry=${encodeURIComponent(title)}`}
-              target={product.brochureUrl ? '_blank' : undefined}
-              rel={product.brochureUrl ? 'noopener noreferrer' : undefined}
+              href={
+                product.exploreUrl ||
+                product.brochureUrl ||
+                `${localizedPath('/contact')}?inquiry=${encodeURIComponent(title)}`
+              }
+              target={product.exploreUrl || product.brochureUrl ? '_blank' : undefined}
+              rel={product.exploreUrl || product.brochureUrl ? 'noopener noreferrer' : undefined}
               className="px-5 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-lg text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
             >
               <span>{locale === 'ar' ? 'استكشف المنتج' : 'Explore Product'}</span>
@@ -269,8 +273,22 @@ export default function PartnerDetail() {
         ar: p.specs?.ar || p.specs?.en || '',
       },
       image: p.image,
+      exploreUrl: p.exploreUrl || p.brochureUrl || '',
+      brochureUrl: p.brochureUrl,
     }))
-    return [...formattedCms, ...staticList]
+
+    // Deduplication & Override:
+    // When a product with the same English title exists in WordPress CMS,
+    // the CMS version completely replaces/overrides the hardcoded static one!
+    const cmsTitles = new Set(
+      formattedCms.map((p) => (p.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, ''))
+    )
+    const nonOverriddenStatic = staticList.filter((s) => {
+      const staticTitleClean = (s.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+      return !cmsTitles.has(staticTitleClean)
+    })
+
+    return [...formattedCms, ...nonOverriddenStatic]
   }
 
   if (!partner) {
