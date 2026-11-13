@@ -9,28 +9,46 @@ import {
   UploadCloud, 
   X, 
   CheckCircle, 
-  FileText 
+  FileText,
+  Loader2
 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
-import { jobsData as fallbackJobs, type JobOpening } from '../data/jobs'
-import { getCareers } from '../services/graphql'
+import { type JobOpening } from '../data/jobs'
+import { getCareers, getCachedCareers, WP_REST_APPLY_URL } from '../services/graphql'
 
 export default function JobDetail() {
   const { locale } = useLanguage()
   const { jobSlug } = useParams<{ jobSlug: string }>()
-  const [jobsList, setJobsList] = useState<JobOpening[]>(fallbackJobs)
+  
+  // Initialize with cached careers so instant render has 0 delay
+  const [jobsList, setJobsList] = useState<JobOpening[]>(() => getCachedCareers())
+  
+  // Find job in initial cached list
+  const initialJob = getCachedCareers().find(
+    (j) => j.slug === jobSlug || j.id === jobSlug || j.code.toLowerCase() === jobSlug?.toLowerCase()
+  )
+  const [isLoading, setIsLoading] = useState(!initialJob)
 
   useEffect(() => {
     let mounted = true
-    getCareers().then((data) => {
-      if (mounted && data && data.length > 0) {
-        setJobsList(data)
-      }
-    })
+    getCareers()
+      .then((data) => {
+        if (mounted) {
+          if (data && data.length > 0) {
+            setJobsList(data)
+          }
+          setIsLoading(false)
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      })
     return () => {
       mounted = false
     }
-  }, [])
+  }, [jobSlug])
 
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
   const [fullName, setFullName] = useState('')
@@ -40,6 +58,7 @@ export default function JobDetail() {
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -55,9 +74,36 @@ export default function JobDetail() {
     }
   }, [isApplyModalOpen])
 
-  // Find job by slug or ID
-  const job = jobsList.find((j) => j.slug === jobSlug || j.id === jobSlug)
+  // Find job by slug, ID, or job code
+  const job = jobsList.find(
+    (j) => j.slug === jobSlug || j.id === jobSlug || j.code.toLowerCase() === jobSlug?.toLowerCase()
+  )
 
+  // If still loading and not yet found in cache, show skeleton
+  if (!job && isLoading) {
+    return (
+      <div className="font-sans min-h-screen bg-slate-50 text-slate-900 pb-24">
+        <div className="pt-24 sm:pt-28 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative w-full min-h-[380px] rounded-3xl bg-slate-900 animate-pulse flex flex-col items-center justify-center p-8 space-y-4">
+            <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
+            <div className="h-6 w-48 bg-slate-800 rounded-lg"></div>
+            <div className="h-10 w-96 max-w-full bg-slate-800 rounded-lg"></div>
+          </div>
+        </div>
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-48 bg-white rounded-3xl p-8 border border-slate-200 animate-pulse"></div>
+            <div className="h-64 bg-white rounded-3xl p-8 border border-slate-200 animate-pulse"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="h-80 bg-white rounded-3xl p-8 border border-slate-200 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // If fetch finished and job is truly not found, redirect to careers list
   if (!job) {
     return <Navigate to={`/${locale}/careers`} replace />
   }
@@ -73,13 +119,51 @@ export default function JobDetail() {
     }
   }
 
-  const handleApplySubmit = (e: React.FormEvent) => {
+  const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!fullName || !email) return
+
     setIsSubmitting(true)
-    setTimeout(() => {
+    setErrorMessage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('fullName', fullName)
+      formData.append('email', email)
+      formData.append('phone', phone)
+      formData.append('coverNote', coverNote)
+      formData.append('jobCode', job.code)
+      formData.append('jobTitle', job.title.en)
+      if (resumeFile) {
+        formData.append('resume', resumeFile)
+      }
+
+      const res = await fetch(WP_REST_APPLY_URL, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const json = await res.json().catch(() => null)
+      if (res.ok && json?.success) {
+        setIsSubmitted(true)
+      } else {
+        setErrorMessage(
+          json?.message ||
+            (locale === 'ar'
+              ? 'حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.'
+              : 'Failed to submit application. Please check your information and try again.')
+        )
+      }
+    } catch (err) {
+      console.error('Job application submission error:', err)
+      setErrorMessage(
+        locale === 'ar'
+          ? 'تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة ثانية.'
+          : 'Could not connect to application server. Please try again in a moment.'
+      )
+    } finally {
       setIsSubmitting(false)
-      setIsSubmitted(true)
-    }, 600)
+    }
   }
 
   const resetModal = () => {
@@ -90,6 +174,7 @@ export default function JobDetail() {
     setPhone('')
     setCoverNote('')
     setResumeFile(null)
+    setErrorMessage(null)
   }
 
   return (
@@ -372,6 +457,11 @@ export default function JobDetail() {
             ) : (
               /* Application Form */
               <form onSubmit={handleApplySubmit} className="space-y-5">
+                {errorMessage && (
+                  <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium leading-relaxed">
+                    {errorMessage}
+                  </div>
+                )}
                 
                 {/* Full Name */}
                 <div className="space-y-1.5">
@@ -473,11 +563,16 @@ export default function JobDetail() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 bg-brand-primary hover:bg-brand-secondary active:scale-[0.98] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer text-center text-base disabled:opacity-50"
+                  className="w-full py-3.5 bg-brand-primary hover:bg-brand-secondary active:scale-[0.98] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer text-center text-base disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isSubmitting
-                    ? (locale === 'ar' ? 'جارٍ الإرسال...' : 'Submitting...')
-                    : (locale === 'ar' ? 'إرسال طلب التوظيف' : 'Submit Application')}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{locale === 'ar' ? 'جارٍ الإرسال إلى إدارة التوظيف...' : 'Submitting Application...'}</span>
+                    </>
+                  ) : (
+                    <span>{locale === 'ar' ? 'إرسال طلب التوظيف' : 'Submit Application'}</span>
+                  )}
                 </button>
 
               </form>

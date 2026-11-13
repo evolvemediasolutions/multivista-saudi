@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: MVGL / Antigravity
  */
 
@@ -135,6 +135,30 @@ add_action('init', function() {
         'show_in_graphql' => true,
         'graphql_single_name' => 'career',
         'graphql_plural_name' => 'careers',
+    ]);
+
+    // 3.4 Job Applications (Received from "Apply for this role" website form)
+    register_post_type('job_application', [
+        'labels' => [
+            'name' => 'Job Applications',
+            'singular_name' => 'Job Application',
+            'menu_name' => 'Job Applications',
+            'all_items' => 'All Applications',
+            'edit_item' => 'View Application',
+            'view_item' => 'View Application',
+            'search_items' => 'Search Applications',
+            'not_found' => 'No applications received yet',
+        ],
+        'public' => false,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'menu_position' => 28,
+        'menu_icon' => 'dashicons-clipboard',
+        'supports' => ['title'],
+        'capabilities' => [
+            'create_posts' => 'do_not_allow',
+        ],
+        'map_meta_cap' => true,
     ]);
 });
 
@@ -740,6 +764,35 @@ add_action('admin_footer', function() {
 });
 
 /**
+ * Helper: Find existing post safely without deprecated functions
+ */
+if (!function_exists('mvgl_find_post')) {
+    function mvgl_find_post($slug_or_title, $post_type) {
+        if (empty($slug_or_title)) return null;
+
+        // Try lookup by post_name (slug)
+        $posts = get_posts([
+            'name' => sanitize_title($slug_or_title),
+            'post_type' => $post_type,
+            'post_status' => 'any',
+            'numberposts' => 1,
+            'suppress_filters' => true,
+        ]);
+        if (!empty($posts)) return $posts[0];
+
+        // Try lookup by title
+        $posts = get_posts([
+            'title' => sanitize_text_field($slug_or_title),
+            'post_type' => $post_type,
+            'post_status' => 'any',
+            'numberposts' => 1,
+            'suppress_filters' => true,
+        ]);
+        return !empty($posts) ? $posts[0] : null;
+    }
+}
+
+/**
  * 7. One-Click Importer to Seed All 60 Frontend Products into WordPress
  */
 add_action('admin_menu', function() {
@@ -753,6 +806,7 @@ add_action('admin_menu', function() {
     );
 });
 
+if (!function_exists('mvgl_render_import_products_page')) {
 function mvgl_render_import_products_page() {
     $seed_file = __DIR__ . '/frontend-products-seed.json';
     $message = '';
@@ -772,7 +826,7 @@ function mvgl_render_import_products_page() {
                     if (empty($title_en)) continue;
                     
                     // Check if product already exists by title
-                    $existing = get_page_by_title($title_en, OBJECT, 'product');
+                    $existing = mvgl_find_post($title_en, 'product');
                     if ($existing) {
                         $post_id = $existing->ID;
                         $updated++;
@@ -786,16 +840,26 @@ function mvgl_render_import_products_page() {
                     }
                     
                     if ($post_id && !is_wp_error($post_id)) {
-                        update_field('partner', $prod['partner'] ?? '', $post_id);
-                        update_field('solution', $prod['solution'] ?? '', $post_id);
-                        update_field('subcategory', $prod['category'] ?? 'all', $post_id);
-                        update_field('title_en', $title_en, $post_id);
-                        update_field('title_ar', $prod['title_ar'] ?? '', $post_id);
-                        update_field('specs_en', $prod['specs_en'] ?? '', $post_id);
-                        update_field('specs_ar', $prod['specs_ar'] ?? '', $post_id);
-                        update_field('description_en', $prod['description_en'] ?? '', $post_id);
-                        update_field('description_ar', $prod['description_ar'] ?? '', $post_id);
-                        update_field('explore_url', $prod['explore_url'] ?? '', $post_id);
+                        $meta_map = [
+                            'partner' => $prod['partner'] ?? '',
+                            'solution' => $prod['solution'] ?? '',
+                            'subcategory' => $prod['category'] ?? 'all',
+                            'title_en' => $title_en,
+                            'title_ar' => $prod['title_ar'] ?? '',
+                            'specs_en' => $prod['specs_en'] ?? '',
+                            'specs_ar' => $prod['specs_ar'] ?? '',
+                            'description_en' => $prod['description_en'] ?? '',
+                            'description_ar' => $prod['description_ar'] ?? '',
+                            'explore_url' => $prod['explore_url'] ?? '',
+                        ];
+
+                        foreach ($meta_map as $key => $val) {
+                            if (function_exists('update_field')) {
+                                update_field($key, $val, $post_id);
+                            } else {
+                                update_post_meta($post_id, $key, $val);
+                            }
+                        }
                     }
                 }
                 $message = '<div class="notice notice-success is-dismissible" style="padding:12px; margin:16px 0;"><p style="font-size:15px;">🎉 <strong>Import Completed Successfully!</strong> ' . $imported . ' products created, ' . $updated . ' products updated. All 60 products can now be edited under <strong>Products &gt; All Products</strong>.</p></div>';
@@ -835,4 +899,315 @@ function mvgl_render_import_products_page() {
         </div>
     </div>
     <?php
+}
+}
+
+/**
+ * 8. Custom Admin Columns & Meta Box for Job Applications
+ */
+add_filter('manage_job_application_posts_columns', function($columns) {
+    return [
+        'cb' => '<input type="checkbox" />',
+        'title' => 'Applicant Name',
+        'job_info' => 'Applied For Role',
+        'applicant_email' => 'Email Address',
+        'applicant_phone' => 'Phone Number',
+        'resume' => 'Resume / CV',
+        'date' => 'Received Date',
+    ];
+});
+
+add_action('manage_job_application_posts_custom_column', function($column, $post_id) {
+    if ($column === 'job_info') {
+        $title = get_post_meta($post_id, '_job_title', true) ?: '-';
+        $code = get_post_meta($post_id, '_job_code', true);
+        echo '<strong>' . esc_html($title) . '</strong>';
+        if ($code) {
+            echo '<br/><span style="display:inline-block; margin-top:3px; padding:2px 7px; background:#e0f2fe; color:#0369a1; border-radius:4px; font-size:11px; font-weight:bold;">' . esc_html($code) . '</span>';
+        }
+    } elseif ($column === 'applicant_email') {
+        $email = get_post_meta($post_id, '_applicant_email', true);
+        if ($email) {
+            echo '<a href="mailto:' . esc_attr($email) . '" style="font-weight:500;">' . esc_html($email) . '</a>';
+        } else {
+            echo '-';
+        }
+    } elseif ($column === 'applicant_phone') {
+        $phone = get_post_meta($post_id, '_applicant_phone', true);
+        if ($phone) {
+            echo '<a href="tel:' . esc_attr($phone) . '">' . esc_html($phone) . '</a>';
+        } else {
+            echo '-';
+        }
+    } elseif ($column === 'resume') {
+        $resume_url = get_post_meta($post_id, '_resume_url', true);
+        if ($resume_url) {
+            echo '<a href="' . esc_url($resume_url) . '" target="_blank" class="button button-small" style="font-weight:bold; color:#187645; border-color:#187645;">📥 Download Resume</a>';
+        } else {
+            echo '<span style="color:#94a3b8; font-style:italic;">No file attached</span>';
+        }
+    }
+}, 10, 2);
+
+add_action('add_meta_boxes', function() {
+    add_meta_box(
+        'mvgl_application_details',
+        '📄 Candidate Application Details',
+        function($post) {
+            $name = get_post_meta($post->ID, '_applicant_name', true);
+            $email = get_post_meta($post->ID, '_applicant_email', true);
+            $phone = get_post_meta($post->ID, '_applicant_phone', true);
+            $job_title = get_post_meta($post->ID, '_job_title', true);
+            $job_code = get_post_meta($post->ID, '_job_code', true);
+            $cover = get_post_meta($post->ID, '_cover_note', true);
+            $resume = get_post_meta($post->ID, '_resume_url', true);
+            ?>
+            <table class="form-table" style="font-size:14px;">
+                <tr>
+                    <th style="width:200px; font-weight:bold;">Applicant Full Name:</th>
+                    <td><strong style="font-size:16px; color:#0f172a;"><?php echo esc_html($name); ?></strong></td>
+                </tr>
+                <tr>
+                    <th style="font-weight:bold;">Applied For Position:</th>
+                    <td>
+                        <strong style="color:#187645; font-size:15px;"><?php echo esc_html($job_title); ?></strong>
+                        <?php if ($job_code): ?>
+                            &nbsp;<code>[<?php echo esc_html($job_code); ?>]</code>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="font-weight:bold;">Email Address:</th>
+                    <td><a href="mailto:<?php echo esc_attr($email); ?>" style="font-weight:600; text-decoration:underline;"><?php echo esc_html($email); ?></a></td>
+                </tr>
+                <tr>
+                    <th style="font-weight:bold;">Phone Number:</th>
+                    <td><a href="tel:<?php echo esc_attr($phone); ?>"><?php echo esc_html($phone); ?></a></td>
+                </tr>
+                <tr>
+                    <th style="font-weight:bold;">Resume / CV Document:</th>
+                    <td>
+                        <?php if ($resume): ?>
+                            <a href="<?php echo esc_url($resume); ?>" target="_blank" class="button button-primary button-large" style="font-weight:bold; background:#187645; border-color:#187645;">
+                                📥 Download / View Resume File
+                            </a>
+                            <p class="description" style="margin-top:6px;"><?php echo esc_html($resume); ?></p>
+                        <?php else: ?>
+                            <em style="color:#64748b;">No resume uploaded with this application.</em>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="font-weight:bold; vertical-align:top;">Cover Note / Message:</th>
+                    <td>
+                        <div style="background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e2e8f0; max-width:650px; font-size:14px; line-height:1.6; color:#334155; white-space:pre-wrap;">
+                            <?php echo esc_html($cover ?: 'No additional notes provided by applicant.'); ?>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <?php
+        },
+        'job_application',
+        'normal',
+        'high'
+    );
+});
+
+/**
+ * 9. REST API Endpoint for Handling "Apply for this role" Website Submissions
+ * Endpoint: POST /wp-json/mvgl/v1/apply-job
+ */
+add_action('rest_api_init', function() {
+    register_rest_route('mvgl/v1', '/apply-job', [
+        'methods' => 'POST',
+        'permission_callback' => '__return_true',
+        'callback' => 'mvgl_handle_job_application_submission',
+    ]);
+});
+
+if (!function_exists('mvgl_handle_job_application_submission')) {
+function mvgl_handle_job_application_submission($request) {
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+    $name = sanitize_text_field($request->get_param('fullName') ?? '');
+    $email = sanitize_email($request->get_param('email') ?? '');
+    $phone = sanitize_text_field($request->get_param('phone') ?? '');
+    $cover = sanitize_textarea_field($request->get_param('coverNote') ?? '');
+    $job_title = sanitize_text_field($request->get_param('jobTitle') ?? '');
+    $job_code = sanitize_text_field($request->get_param('jobCode') ?? '');
+
+    if (empty($name) || empty($email)) {
+        return new WP_Error('missing_required_fields', 'Please provide both your full name and a valid email address.', ['status' => 400]);
+    }
+
+    $resume_url = '';
+    if (!empty($_FILES['resume']['name'])) {
+        if (!function_exists('wp_handle_upload')) {
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+        }
+
+        $uploaded = wp_handle_upload($_FILES['resume'], ['test_form' => false]);
+        if (!isset($uploaded['error']) && isset($uploaded['url'])) {
+            $resume_url = $uploaded['url'];
+        }
+    }
+
+    // Create the job application post
+    $post_title = $name . ' — ' . ($job_title ?: ($job_code ?: 'General Role'));
+    $post_id = wp_insert_post([
+        'post_title' => $post_title,
+        'post_type' => 'job_application',
+        'post_status' => 'publish',
+    ]);
+
+    if (is_wp_error($post_id)) {
+        return new WP_Error('application_failed', 'Could not record job application in the database.', ['status' => 500]);
+    }
+
+    update_post_meta($post_id, '_applicant_name', $name);
+    update_post_meta($post_id, '_applicant_email', $email);
+    update_post_meta($post_id, '_applicant_phone', $phone);
+    update_post_meta($post_id, '_job_title', $job_title);
+    update_post_meta($post_id, '_job_code', $job_code);
+    update_post_meta($post_id, '_cover_note', $cover);
+    update_post_meta($post_id, '_resume_url', $resume_url);
+
+    return rest_ensure_response([
+        'success' => true,
+        'message' => 'Thank you! Your application has been successfully submitted and saved in our talent database.',
+        'application_id' => $post_id,
+        'resume_saved' => !empty($resume_url),
+    ]);
+}
+}
+
+/**
+ * 10. One-Click Importer to Seed All 6 Frontend Job Openings into WordPress
+ */
+add_action('admin_menu', function() {
+    add_submenu_page(
+        'edit.php?post_type=career',
+        'Import Frontend Openings',
+        '📥 Import All Openings',
+        'manage_options',
+        'mvgl-import-careers',
+        'mvgl_render_import_careers_page'
+    );
+});
+
+if (!function_exists('mvgl_render_import_careers_page')) {
+function mvgl_render_import_careers_page() {
+    $seed_file = __DIR__ . '/frontend-careers-seed.json';
+    $message = '';
+
+    if (isset($_POST['mvgl_do_import_careers']) && check_admin_referer('mvgl_import_careers_nonce')) {
+        if (!file_exists($seed_file)) {
+            $message = '<div class="notice notice-error"><p>Seed file frontend-careers-seed.json not found in plugin directory.</p></div>';
+        } else {
+            $json_data = file_get_contents($seed_file);
+            $jobs = json_decode($json_data, true);
+            $imported = 0;
+            $updated = 0;
+
+            if (is_array($jobs)) {
+                foreach ($jobs as $job) {
+                    $title_en = sanitize_text_field($job['title']['en'] ?? '');
+                    $code = sanitize_text_field($job['code'] ?? '');
+                    $slug = sanitize_title($job['slug'] ?? '');
+                    if (empty($title_en)) continue;
+
+                    // Check if job exists by slug or title
+                    $existing = mvgl_find_post($slug, 'career');
+                    if (!$existing) {
+                        $existing = mvgl_find_post($title_en, 'career');
+                    }
+
+                    if ($existing) {
+                        $post_id = $existing->ID;
+                        $updated++;
+                    } else {
+                        $post_id = wp_insert_post([
+                            'post_title' => $title_en,
+                            'post_name' => $slug,
+                            'post_type' => 'career',
+                            'post_status' => 'publish',
+                        ]);
+                        $imported++;
+                    }
+
+                    if ($post_id && !is_wp_error($post_id)) {
+                        $meta_map = [
+                            'job_code' => $code,
+                            'is_active' => 1,
+                            'title_en' => $title_en,
+                            'title_ar' => $job['title']['ar'] ?? '',
+                            'department_en' => $job['department']['en'] ?? '',
+                            'department_ar' => $job['department']['ar'] ?? '',
+                            'designation_en' => $job['designation']['en'] ?? '',
+                            'designation_ar' => $job['designation']['ar'] ?? '',
+                            'location_en' => $job['location']['en'] ?? '',
+                            'location_ar' => $job['location']['ar'] ?? '',
+                            'experience_en' => $job['experience']['en'] ?? '',
+                            'experience_ar' => $job['experience']['ar'] ?? '',
+                            'employment_type_en' => $job['employmentType']['en'] ?? 'Full-time',
+                            'employment_type_ar' => $job['employmentType']['ar'] ?? 'دوام كامل',
+                            'about_role_en' => $job['aboutRole']['en'] ?? '',
+                            'about_role_ar' => $job['aboutRole']['ar'] ?? '',
+                            'responsibilities_en' => implode("\n", $job['responsibilities']['en'] ?? []),
+                            'responsibilities_ar' => implode("\n", $job['responsibilities']['ar'] ?? []),
+                            'requirements_en' => implode("\n", $job['requirements']['en'] ?? []),
+                            'requirements_ar' => implode("\n", $job['requirements']['ar'] ?? []),
+                        ];
+
+                        foreach ($meta_map as $key => $val) {
+                            if (function_exists('update_field')) {
+                                update_field($key, $val, $post_id);
+                            } else {
+                                update_post_meta($post_id, $key, $val);
+                            }
+                        }
+                    }
+                }
+                $message = '<div class="notice notice-success is-dismissible" style="padding:12px; margin:16px 0;"><p style="font-size:15px;">🎉 <strong>Openings Imported Successfully!</strong> ' . $imported . ' positions created, ' . $updated . ' positions updated. All career roles are now live under <strong>Careers &gt; All Careers</strong>.</p></div>';
+            }
+        }
+    }
+
+    ?>
+    <div class="wrap" style="max-width: 900px; padding: 20px 0;">
+        <h1>📥 Import Frontend Job Openings to WordPress CMS</h1>
+        <div style="background:#fff; border:1px solid #ccd0d4; padding:24px; border-radius:10px; margin-top:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <h2 style="margin-top:0;">Manage All Career Openings Directly From WordPress</h2>
+            <p style="font-size:14px; line-height:1.6; color:#475569;">
+                This tool imports all <strong>6 career positions</strong> currently hardcoded in the frontend code into your WordPress CMS as full, editable <code>Career</code> posts with their job codes, departments, designations, and bilingual responsibilities &amp; requirements.
+            </p>
+            <ul style="list-style:disc; margin-left:24px; color:#475569; font-size:14px; line-height:1.7;">
+                <li><strong>VM153</strong>: Project Manager, Smart Infrastructure</li>
+                <li><strong>VM152</strong>: Supply Chain Analyst</li>
+                <li><strong>VM151</strong>: Robotics Application Specialist</li>
+                <li><strong>VM150</strong>: Sales Engineer, Distribution</li>
+                <li><strong>VM149</strong>: Automation &amp; Control Systems Engineer</li>
+                <li><strong>VM148</strong>: Industrial Refrigeration &amp; HVAC Specialist</li>
+            </ul>
+            <p style="font-size:14px; color:#475569;">
+                Once imported, you can edit requirements, change locations, toggle active status, delete roles, or create new openings!
+            </p>
+
+            <?php echo $message; ?>
+
+            <form method="post" style="margin-top:24px;">
+                <?php wp_nonce_field('mvgl_import_careers_nonce'); ?>
+                <p>
+                    <input type="submit" name="mvgl_do_import_careers" class="button button-primary button-hero" value="🚀 Import / Sync All 6 Frontend Openings to CMS" onclick="return confirm('Import all 6 frontend openings into WordPress? Existing positions will be updated safely without duplicates.');" style="font-weight:bold; height:46px; line-height:44px; padding:0 28px;">
+                </p>
+            </form>
+        </div>
+    </div>
+    <?php
+}
 }

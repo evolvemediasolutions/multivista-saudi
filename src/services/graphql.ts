@@ -16,6 +16,9 @@ export interface BlogPostItem {
 export const WP_GRAPHQL_URL =
   import.meta.env.VITE_WP_GRAPHQL_URL || 'https://saudicms.multivistaprintsolutions.com/graphql'
 
+export const WP_REST_APPLY_URL =
+  import.meta.env.VITE_WP_REST_APPLY_URL || 'https://saudicms.multivistaprintsolutions.com/wp-json/mvgl/v1/apply-job'
+
 /**
  * Generic GraphQL Fetcher with robust error handling and cache-busting
  */
@@ -120,8 +123,31 @@ function parseLines(text?: string): string[] {
     .filter((s) => s.length > 0)
 }
 
+// In-Memory and LocalStorage Cache for 0ms Instant Rendering of Careers
+const CACHE_KEY_CAREERS = 'mvgl_cache_careers'
+let inMemoryCareers: JobOpening[] | null = null
+
 /**
- * 2. Fetch Careers / Jobs from Headless WordPress (with static fallback)
+ * Synchronous instant cache getter for Careers (0ms latency, zero delay)
+ */
+export function getCachedCareers(): JobOpening[] {
+  if (!inMemoryCareers) {
+    try {
+      const stored = localStorage.getItem(CACHE_KEY_CAREERS)
+      if (stored) {
+        inMemoryCareers = JSON.parse(stored)
+      }
+    } catch {}
+  }
+
+  if (inMemoryCareers && inMemoryCareers.length > 0) {
+    return inMemoryCareers
+  }
+  return jobsData
+}
+
+/**
+ * 2. Fetch Careers / Jobs from Headless WordPress with instant cache & smart merge
  */
 export async function getCareers(): Promise<JobOpening[]> {
   const query = `
@@ -158,61 +184,159 @@ export async function getCareers(): Promise<JobOpening[]> {
   `
 
   const data = await fetchGraphQL<{ careers: { nodes: any[] } }>(query)
-  if (data?.careers?.nodes && data.careers.nodes.length > 0) {
-    const validJobs = data.careers.nodes
-      .filter((node) => node.careerFields?.isActive !== false)
-      .map((node) => {
-        const f = node.careerFields || {}
-        return {
-          id: node.slug || node.id,
-          code: f.jobCode || 'VM-NEW',
-          slug: node.slug || node.id,
-          title: {
-            en: f.titleEn || 'Job Opening',
-            ar: f.titleAr || f.titleEn || 'وظيفة شاغرة',
-          },
-          department: {
-            en: f.departmentEn || 'Engineering',
-            ar: f.departmentAr || f.departmentEn || 'الهندسة',
-          },
-          designation: {
-            en: f.designationEn || f.titleEn || 'Engineer',
-            ar: f.designationAr || f.titleAr || 'مهندس',
-          },
-          location: {
-            en: f.locationEn || 'Saudi Arabia',
-            ar: f.locationAr || 'المملكة العربية السعودية',
-          },
-          experience: {
-            en: f.experienceEn || '3-5 Years',
-            ar: f.experienceAr || '٣-٥ سنوات',
-          },
-          employmentType: {
-            en: f.employmentTypeEn || 'Full-time',
-            ar: f.employmentTypeAr || 'دوام كامل',
-          },
-          aboutRole: {
-            en: f.aboutRoleEn || '',
-            ar: f.aboutRoleAr || f.aboutRoleEn || '',
-          },
-          responsibilities: {
-            en: parseLines(f.responsibilitiesEn),
-            ar: parseLines(f.responsibilitiesAr),
-          },
-          requirements: {
-            en: parseLines(f.requirementsEn),
-            ar: parseLines(f.requirementsAr),
-          },
-        }
-      })
+  if (data?.careers?.nodes && Array.isArray(data.careers.nodes)) {
+    const cmsMap = new Map<string, { job: JobOpening; isActive: boolean }>()
 
-    if (validJobs.length > 0) {
-      return validJobs
+    data.careers.nodes.forEach((node) => {
+      const f = node.careerFields || {}
+      const isActive = f.isActive !== false
+      const titleEn = f.titleEn || node.slug || 'Job Opening'
+      const titleAr = f.titleAr || titleEn
+      const jobCode = f.jobCode || ''
+      const slug = node.slug || (jobCode ? jobCode.toLowerCase() : node.id)
+
+      const jobItem: JobOpening = {
+        id: slug || node.id,
+        code: jobCode || 'VM-NEW',
+        slug: slug,
+        title: {
+          en: titleEn,
+          ar: titleAr,
+        },
+        department: {
+          en: f.departmentEn || 'Engineering',
+          ar: f.departmentAr || f.departmentEn || 'الهندسة',
+        },
+        designation: {
+          en: f.designationEn || titleEn,
+          ar: f.designationAr || titleAr,
+        },
+        location: {
+          en: f.locationEn || 'Saudi Arabia',
+          ar: f.locationAr || 'المملكة العربية السعودية',
+        },
+        experience: {
+          en: f.experienceEn || '3-5 Years',
+          ar: f.experienceAr || '٣-٥ سنوات',
+        },
+        employmentType: {
+          en: f.employmentTypeEn || 'Full-time',
+          ar: f.employmentTypeAr || 'دوام كامل',
+        },
+        aboutRole: {
+          en: f.aboutRoleEn || '',
+          ar: f.aboutRoleAr || f.aboutRoleEn || '',
+        },
+        responsibilities: {
+          en: parseLines(f.responsibilitiesEn),
+          ar: parseLines(f.responsibilitiesAr),
+        },
+        requirements: {
+          en: parseLines(f.requirementsEn),
+          ar: parseLines(f.requirementsAr),
+        },
+      }
+
+      if (jobCode) cmsMap.set(jobCode.toLowerCase(), { job: jobItem, isActive })
+      if (slug) cmsMap.set(slug.toLowerCase(), { job: jobItem, isActive })
+      if (titleEn) cmsMap.set(titleEn.toLowerCase(), { job: jobItem, isActive })
+    })
+
+    // Merge logic:
+    // 1. Process static fallback jobs: override if CMS has customized them, or hide if deactivated
+    const mergedList: JobOpening[] = []
+    const usedCmsSlugs = new Set<string>()
+
+    for (const staticJob of jobsData) {
+      const match =
+        cmsMap.get(staticJob.code.toLowerCase()) ||
+        cmsMap.get(staticJob.slug.toLowerCase()) ||
+        cmsMap.get(staticJob.title.en.toLowerCase())
+
+      if (match) {
+        usedCmsSlugs.add(match.job.slug.toLowerCase())
+        usedCmsSlugs.add(match.job.code.toLowerCase())
+        if (match.isActive) {
+          mergedList.push(match.job)
+        }
+      } else {
+        mergedList.push(staticJob)
+      }
+    }
+
+    // 2. Prepend brand-new active CMS jobs created from WordPress
+    data.careers.nodes.forEach((node) => {
+      const f = node.careerFields || {}
+      if (f.isActive === false) return
+      const titleEn = f.titleEn || node.slug || ''
+      const jobCode = f.jobCode || ''
+      const slug = node.slug || (jobCode ? jobCode.toLowerCase() : node.id)
+
+      if (
+        (jobCode && usedCmsSlugs.has(jobCode.toLowerCase())) ||
+        (slug && usedCmsSlugs.has(slug.toLowerCase()))
+      ) {
+        return // already merged
+      }
+
+      usedCmsSlugs.add(slug.toLowerCase())
+      if (jobCode) usedCmsSlugs.add(jobCode.toLowerCase())
+
+      const newJob: JobOpening = {
+        id: slug || node.id,
+        code: jobCode || 'VM-NEW',
+        slug: slug,
+        title: {
+          en: titleEn || 'Job Opening',
+          ar: f.titleAr || titleEn || 'وظيفة شاغرة',
+        },
+        department: {
+          en: f.departmentEn || 'Engineering',
+          ar: f.departmentAr || f.departmentEn || 'الهندسة',
+        },
+        designation: {
+          en: f.designationEn || titleEn,
+          ar: f.designationAr || titleEn,
+        },
+        location: {
+          en: f.locationEn || 'Saudi Arabia',
+          ar: f.locationAr || 'المملكة العربية السعودية',
+        },
+        experience: {
+          en: f.experienceEn || '3-5 Years',
+          ar: f.experienceAr || '٣-٥ سنوات',
+        },
+        employmentType: {
+          en: f.employmentTypeEn || 'Full-time',
+          ar: f.employmentTypeAr || 'دوام كامل',
+        },
+        aboutRole: {
+          en: f.aboutRoleEn || '',
+          ar: f.aboutRoleAr || f.aboutRoleEn || '',
+        },
+        responsibilities: {
+          en: parseLines(f.responsibilitiesEn),
+          ar: parseLines(f.responsibilitiesAr),
+        },
+        requirements: {
+          en: parseLines(f.requirementsEn),
+          ar: parseLines(f.requirementsAr),
+        },
+      }
+
+      mergedList.unshift(newJob)
+    })
+
+    if (mergedList.length > 0) {
+      inMemoryCareers = mergedList
+      try {
+        localStorage.setItem(CACHE_KEY_CAREERS, JSON.stringify(mergedList))
+      } catch {}
+      return mergedList
     }
   }
 
-  // Fallback to static jobs
-  return jobsData
+  return getCachedCareers()
 }
 
 /**

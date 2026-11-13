@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Search, MapPin, Briefcase, ChevronRight, ChevronLeft, SlidersHorizontal, RotateCcw } from 'lucide-react'
 import { useLanguage } from '../../context/LanguageContext'
-import { jobsData as fallbackJobs, type JobOpening } from '../../data/jobs'
-import { getCareers } from '../../services/graphql'
+import { type JobOpening } from '../../data/jobs'
+import { getCareers, getCachedCareers } from '../../services/graphql'
 
 interface CurrentOpeningsSectionProps {
   id?: string
@@ -13,20 +13,39 @@ interface CurrentOpeningsSectionProps {
 export default function CurrentOpeningsSection({ id = 'openings', className = '' }: CurrentOpeningsSectionProps) {
   const { locale, dir } = useLanguage()
 
-  const [jobs, setJobs] = useState<JobOpening[]>(fallbackJobs)
+  // Initialize with cached careers so openings show with 0ms delay
+  const [jobs, setJobs] = useState<JobOpening[]>(() => getCachedCareers())
   const [keyword, setKeyword] = useState('')
   const [selectedDesignation, setSelectedDesignation] = useState('')
   const [selectedLocation, setSelectedLocation] = useState('')
 
   useEffect(() => {
     let mounted = true
-    getCareers().then((data) => {
-      if (mounted && data && data.length > 0) {
-        setJobs(data)
+
+    const loadCareers = () => {
+      getCareers().then((data) => {
+        if (mounted && data && data.length > 0) {
+          setJobs(data)
+        }
+      })
+    }
+
+    loadCareers()
+
+    // Real-time zero-delay revalidation when admin returns to tab after publishing in WordPress
+    const handleRevalidate = () => {
+      if (document.visibilityState === 'visible') {
+        loadCareers()
       }
-    })
+    }
+
+    window.addEventListener('focus', handleRevalidate)
+    document.addEventListener('visibilitychange', handleRevalidate)
+
     return () => {
       mounted = false
+      window.removeEventListener('focus', handleRevalidate)
+      document.removeEventListener('visibilitychange', handleRevalidate)
     }
   }, [])
 
