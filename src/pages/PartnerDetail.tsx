@@ -1,13 +1,198 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, Link } from 'react-router-dom'
+import { X } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 import { partnersData } from '../data/partners'
 import { getPartnerProducts, getCachedPartnerProducts, type PartnerProduct } from '../services/graphql'
 import IndustrialChallengeCTA from '../components/ui/IndustrialChallengeCTA'
 
+interface ProductCardProps {
+  prod: any
+  locale: string
+  dir: string
+  onViewMore: (p: any) => void
+}
+
+function ProductCard({ prod, locale, dir, onViewMore }: ProductCardProps) {
+  const title = prod.title?.[locale] || prod.title?.en || 'Product'
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200/80 hover:border-slate-300 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between text-start p-6">
+      {/* Centered Image Container */}
+      <div className="h-56 sm:h-64 w-full bg-white relative overflow-hidden flex items-center justify-center p-2 mb-4">
+        <img
+          src={prod.image}
+          alt={title}
+          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+      </div>
+
+      {/* Product Tag & Title */}
+      <div className="flex flex-col justify-between flex-grow space-y-3">
+        <div>
+          <span className="text-xs font-semibold text-brand-primary uppercase tracking-wider block mb-1.5">
+            {prod.tag}
+          </span>
+          <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
+            {title}
+          </h4>
+        </div>
+
+        {/* View More Button */}
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => onViewMore(prod)}
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 rtl:group-hover:-translate-x-1 duration-200 cursor-pointer"
+          >
+            <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
+            <span>{dir === 'rtl' ? '←' : '→'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface ProductModalProps {
+  product: any
+  locale: string
+  dir: string
+  onClose: () => void
+  localizedPath: (p: string) => string
+}
+
+function ProductModal({ product, locale, dir, onClose, localizedPath }: ProductModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [onClose])
+
+  if (!product) return null
+
+  const title = product.title?.[locale] || product.title?.en || 'Product'
+
+  // Parse specifications into individual rows
+  const specText = product.specs?.[locale] || product.specs?.en || product.specs || ''
+  let specItems: string[] = []
+  if (typeof specText === 'string' && specText.trim()) {
+    specItems = specText.split(/\||\r?\n/).map((s: string) => s.trim()).filter(Boolean)
+  }
+  if (product.features && typeof product.features === 'object' && !Array.isArray(product.features)) {
+    if (product.features.range) {
+      specItems.push(`${locale === 'ar' ? 'نطاق السعة: ' : 'Range: '} ${product.features.range[locale] || product.features.range.en}`)
+    }
+    if (product.features.refrigerants) {
+      specItems.push(`${locale === 'ar' ? 'وسائط التبريد: ' : 'Refrigerants: '} ${product.features.refrigerants[locale] || product.features.refrigerants.en}`)
+    }
+  }
+  if (Array.isArray(product.highlights?.[locale] || product.highlights?.en)) {
+    specItems.push(...(product.highlights?.[locale] || product.highlights?.en || []))
+  }
+  if (specItems.length === 0 && Array.isArray(product.features?.[locale] || product.features?.en)) {
+    specItems = (product.features?.[locale] || product.features?.en || []).map((f: string) => f.trim()).filter(Boolean)
+  }
+  if (specItems.length === 0 && (product.desc?.[locale] || product.desc?.en)) {
+    specItems = [product.desc[locale] || product.desc.en]
+  }
+  if (specItems.length === 0) {
+    specItems = [locale === 'ar' ? 'المواصفات متوفرة عند الطلب' : 'Standard Industrial Specifications']
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[99999] overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="relative w-full max-w-lg my-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 max-h-[90vh] overflow-y-auto text-start animate-fade-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-5 right-5 rtl:right-auto rtl:left-5 text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+          aria-label={locale === 'ar' ? 'إغلاق' : 'Close'}
+          title={locale === 'ar' ? 'إغلاق' : 'Close'}
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Tag & Title */}
+        <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
+          {product.tag}
+        </span>
+        <h3 className="text-xl sm:text-2xl font-bold text-slate-950 mt-1 leading-snug pr-8 rtl:pr-0 rtl:pl-8">
+          {title}
+        </h3>
+
+        {/* Specifications Section */}
+        <div className="mt-6">
+          <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100">
+            {locale === 'ar' ? 'المواصفات' : 'SPECIFICATIONS'}
+          </h4>
+
+          {/* List of Specifications separated by subtle borders */}
+          <div className="divide-y divide-slate-100">
+            {specItems.map((spec: string, sidx: number) => (
+              <div key={sidx} className="py-3 text-sm font-medium text-slate-700 leading-normal">
+                {spec}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-6 mt-4 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-4">
+            <a
+              href={product.brochureUrl || `${localizedPath('/contact')}?inquiry=${encodeURIComponent(title)}`}
+              target={product.brochureUrl ? '_blank' : undefined}
+              rel={product.brochureUrl ? 'noopener noreferrer' : undefined}
+              className="px-5 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-lg text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>{locale === 'ar' ? 'استكشف المنتج' : 'Explore Product'}</span>
+              <span>{dir === 'rtl' ? '←' : '→'}</span>
+            </a>
+
+            <Link
+              to={`${localizedPath('/contact')}?inquiry=${encodeURIComponent(title)}`}
+              onClick={onClose}
+              className="text-xs sm:text-sm font-medium text-brand-primary hover:text-brand-secondary hover:underline transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <span>{locale === 'ar' ? 'استفسر عن هذا المنتج' : 'Inquire about this product'}</span>
+              <span>{dir === 'rtl' ? '←' : '→'}</span>
+            </Link>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PartnerDetail() {
   const { slug, partnerSlug, solutionSlug } = useParams<{ slug?: string; partnerSlug?: string; solutionSlug?: string }>()
-  const { locale } = useLanguage()
+  const { locale, dir } = useLanguage()
   const [kirloskarFilter, setKirloskarFilter] = useState('all')
   const [rockwellFilter, setRockwellFilter] = useState('all')
   const [hmsFilter, setHmsFilter] = useState('all')
@@ -15,6 +200,36 @@ export default function PartnerDetail() {
   const [eppFilter, setEppFilter] = useState('all')
   const [sppFilter, setSppFilter] = useState('all')
   const [prosoftFilter, setProsoftFilter] = useState('all')
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null)
+
+  // Manage body scroll lock and ensure cleanup whenever selectedProduct changes
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [selectedProduct])
+
+  // Safety net on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
+  const handleCloseModal = () => {
+    setSelectedProduct(null)
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
+  }
 
   const activeSlug = partnerSlug || slug || ''
   const partner = partnersData.find((p) => p.slug === activeSlug)
@@ -388,16 +603,52 @@ export default function PartnerDetail() {
                       category: 'controllers',
                       tag: 'ROCKWELL AUTOMATION',
                       title: {
-                        en: 'Programmable Controllers',
-                        ar: 'أجهزة التحكم المنطقية القابلة للبرمجة (PAC/PLC)'
+                        en: 'ControlLogix® 5590 Controllers',
+                        ar: 'أجهزة التحكم ControlLogix® 5590'
                       },
                       desc: {
-                        en: 'High-performance programmable automation controllers (ControlLogix & CompactLogix) engineered for mission-critical industrial logic, motion, safety, and process automation.',
-                        ar: 'أجهزة تحكم برمجية متطورة (ControlLogix و CompactLogix) مصممة للعمليات الصناعية الحيوية والتحكم في الحركة والسلامة.'
+                        en: 'Next-generation high-speed industrial automation controllers engineered for high-availability process and safety applications.',
+                        ar: 'أجهزة تحكم متطورة من الجيل التالي للعمليات الصناعية وتطبيقات السلامة عالية التوافر.'
                       },
                       specs: {
-                        en: 'ControlLogix & CompactLogix | Scalable PAC Architecture',
-                        ar: 'معمارية تحكم متدرجة | أداء فائق السرعة'
+                        en: 'Ultra-Fast Processing | High-Availability Redundancy | Scalable Motion Control | Gigabit Industrial Ethernet | Studio 5000 Integration',
+                        ar: 'معالجة فائقة السرعة | معمارية مزدوجة عالية التوافر | تحكم متدرج بالحركة | إيثرنت صناعي جيجابت | تكامل مع Studio 5000'
+                      },
+                      image: '/AUTOMATION CONTROL/ROCKWELL AUTOMATION/Programmable Controllers.jpg'
+                    },
+                    {
+                      id: 2,
+                      category: 'controllers',
+                      tag: 'ROCKWELL AUTOMATION',
+                      title: {
+                        en: 'ControlLogix® 5580 Controllers',
+                        ar: 'أجهزة التحكم ControlLogix® 5580'
+                      },
+                      desc: {
+                        en: 'High-performance programmable automation controllers engineered for mission-critical industrial logic, motion, safety, and process automation.',
+                        ar: 'أجهزة تحكم برمجية متطورة مصممة للعمليات الصناعية الحيوية والتحكم في الحركة والسلامة.'
+                      },
+                      specs: {
+                        en: 'High-Speed Processing | Integrated Motion Control | EtherNet/IP Communication | Scalable Architecture | Studio 5000 Integration',
+                        ar: 'معالجة فائقة السرعة | تحكم مدمج في الحركة | اتصالات EtherNet/IP | معمارية قابلة للتوسع | تكامل مع Studio 5000'
+                      },
+                      image: '/AUTOMATION CONTROL/ROCKWELL AUTOMATION/Programmable Controllers.jpg'
+                    },
+                    {
+                      id: 3,
+                      category: 'controllers',
+                      tag: 'ROCKWELL AUTOMATION',
+                      title: {
+                        en: 'CompactLogix™ 5380 Controllers',
+                        ar: 'أجهزة التحكم CompactLogix™ 5380'
+                      },
+                      desc: {
+                        en: 'Compact, scalable automation controllers delivering precision motion, high-speed discrete control, and integrated safety.',
+                        ar: 'أجهزة تحكم مدمجة ومتدرجة توفر دقة التحكم في الحركة والتحكم الرقمي السريع والسلامة المتكاملة.'
+                      },
+                      specs: {
+                        en: 'Compact Form Factor | High-Speed Discrete Control | Dual Gigabit Ethernet | Integrated Safety SIL 3 | Motion Over EtherNet/IP',
+                        ar: 'حجم مدمج | تحكم رقمي فائق السرعة | منفذا إيثرنت جيجابت | أمان متكامل SIL 3 | تحكم بالحركة عبر EtherNet/IP'
                       },
                       image: '/AUTOMATION CONTROL/ROCKWELL AUTOMATION/Programmable Controllers.jpg'
                     },
@@ -566,51 +817,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => rockwellFilter === 'all' || prod.category === rockwellFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border-0"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-3">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
-                          <div className="space-y-2">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-                            {prod.specs && (
-                              <div className="pt-1">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -693,52 +906,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => sppFilter === 'all' || prod.category === sppFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border border-slate-100/80"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-4">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
-                          <div className="space-y-3">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-
-                            {prod.specs && (
-                              <div className="pt-2 border-t border-slate-100">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -894,51 +1068,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => kirloskarFilter === 'all' || prod.category === kirloskarFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border-0"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-3">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
-                          <div className="space-y-2">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-                            {prod.specs && (
-                              <div className="pt-1">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -1129,77 +1265,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => chillersFilter === 'all' || prod.category === chillersFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border border-slate-100/80"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-4">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
-                          <div className="space-y-3">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-
-                            {/* Highlights List if present */}
-                            {'highlights' in prod && prod.highlights && (
-                              <ul className="space-y-1 pt-1 pb-1">
-                                {prod.highlights[locale].map((point: string, pIdx: number) => (
-                                  <li key={pIdx} className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-brand-primary shrink-0"></span>
-                                    <span>{point}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-
-                            {/* Product Features (Range & Refrigerants) */}
-                            {prod.features && (
-                              <div className="pt-3 border-t border-slate-100 space-y-1.5 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
-                                <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block">
-                                  {locale === 'ar' ? 'ميزات ومواصفات المنتج' : 'PRODUCT FEATURES'}
-                                </span>
-                                {prod.features.range && (
-                                  <div className="text-xs text-slate-700 leading-snug">
-                                    <span className="font-bold text-slate-900">{locale === 'ar' ? 'النطاق: ' : 'Range: '}</span>
-                                    <span>{prod.features.range[locale]}</span>
-                                  </div>
-                                )}
-                                {prod.features.refrigerants && (
-                                  <div className="text-xs text-slate-700 leading-snug">
-                                    <span className="font-bold text-slate-900">{locale === 'ar' ? 'وسائط التبريد: ' : 'Refrigerants: '}</span>
-                                    <span>{prod.features.refrigerants[locale]}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -1374,51 +1446,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => hmsFilter === 'all' || prod.category === hmsFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border-0"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-4">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-3">
-                          <div className="space-y-2">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-                            {prod.specs && (
-                              <div className="pt-1">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -1801,52 +1835,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => prosoftFilter === 'all' || prod.category === prosoftFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border border-slate-100/80"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-4">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
-                          <div className="space-y-3">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-
-                            {prod.specs && (
-                              <div className="pt-2 border-t border-slate-100">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -2040,52 +2035,13 @@ export default function PartnerDetail() {
                   ])
                     .filter((prod) => eppFilter === 'all' || prod.category === eppFilter || prod.category === 'all')
                     .map((prod, idx) => (
-                      <div
+                      <ProductCard
                         key={idx}
-                        className="bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 group flex flex-col justify-between text-start border border-slate-100/80"
-                      >
-                        {/* Image Container */}
-                        <div className="h-64 sm:h-72 bg-white relative overflow-hidden flex items-center justify-center p-4">
-                          <img
-                            src={prod.image}
-                            alt={prod.title[locale]}
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                          />
-                        </div>
-
-                        {/* Card Bottom Description */}
-                        <div className="p-6 sm:p-7 bg-white flex-grow flex flex-col justify-between space-y-4">
-                          <div className="space-y-3">
-                            <span className="text-xs font-bold text-brand-primary uppercase tracking-widest block">
-                              {prod.tag}
-                            </span>
-                            <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-brand-primary transition-colors leading-snug">
-                              {prod.title[locale]}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                              {prod.desc[locale]}
-                            </p>
-
-                            {prod.specs && (
-                              <div className="pt-2 border-t border-slate-100">
-                                <span className="inline-block text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200/80 px-2.5 py-1 rounded-md">
-                                  {prod.specs[locale]}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="pt-3 border-t border-slate-100">
-                            <Link
-                              to={localizedPath('/contact')}
-                              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-primary hover:text-brand-secondary transition-colors group-hover:translate-x-1 duration-200"
-                            >
-                              <span>{locale === 'ar' ? 'عرض المزيد' : 'View More'}</span>
-                              <span>&rarr;</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        prod={prod}
+                        locale={locale}
+                        dir={dir}
+                        onViewMore={setSelectedProduct}
+                      />
                     ))}
                 </div>
               </div>
@@ -2106,6 +2062,18 @@ export default function PartnerDetail() {
       </section>
 
       <IndustrialChallengeCTA bgImage="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80" />
+
+      {/* Product Specification Modal matching Screenshot 2 */}
+      {selectedProduct && typeof document !== 'undefined' && createPortal(
+        <ProductModal
+          product={selectedProduct}
+          locale={locale}
+          dir={dir}
+          onClose={handleCloseModal}
+          localizedPath={localizedPath}
+        />,
+        document.body
+      )}
 
     </div>
   )

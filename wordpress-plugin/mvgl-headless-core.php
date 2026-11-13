@@ -14,9 +14,11 @@ if (!defined('ABSPATH')) {
  * 1. Enable CORS for GraphQL Requests from React Frontend
  */
 add_action('init', function() {
-    header("Access-Control-Allow-Origin: *");
-    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    if (!headers_sent()) {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    }
     
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         status_header(200);
@@ -27,39 +29,41 @@ add_action('init', function() {
 /**
  * 2. Automatic Google Translate to Arabic Helper
  */
-function mvgl_auto_translate_to_arabic($text) {
-    if (empty(trim($text))) {
-        return '';
-    }
-    
-    $encoded = urlencode(trim($text));
-    $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
-    
-    $response = wp_remote_get($url, [
-        'timeout' => 15,
-        'headers' => [
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-        ]
-    ]);
-    
-    if (is_wp_error($response)) {
+if (!function_exists('mvgl_auto_translate_to_arabic')) {
+    function mvgl_auto_translate_to_arabic($text) {
+        if (empty(trim($text))) {
+            return '';
+        }
+        
+        $encoded = urlencode(trim($text));
+        $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
+        
+        $response = wp_remote_get($url, [
+            'timeout' => 15,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            ]
+        ]);
+        
+        if (is_wp_error($response)) {
+            return $text;
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (isset($data[0]) && is_array($data[0])) {
+            $translated = '';
+            foreach ($data[0] as $segment) {
+                if (isset($segment[0])) {
+                    $translated .= $segment[0];
+                }
+            }
+            return trim($translated);
+        }
+        
         return $text;
     }
-    
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    if (isset($data[0]) && is_array($data[0])) {
-        $translated = '';
-        foreach ($data[0] as $segment) {
-            if (isset($segment[0])) {
-                $translated .= $segment[0];
-            }
-        }
-        return trim($translated);
-    }
-    
-    return $text;
 }
 
 /**
