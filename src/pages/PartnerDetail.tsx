@@ -243,15 +243,33 @@ export default function PartnerDetail() {
 
   useEffect(() => {
     let mounted = true
-    if (activeSlug) {
-      getPartnerProducts(activeSlug).then((prods) => {
-        if (mounted && prods) {
-          setCmsProducts(prods)
-        }
-      })
+    const fetchFreshProducts = () => {
+      if (activeSlug) {
+        getPartnerProducts(activeSlug).then((prods) => {
+          if (mounted && prods) {
+            setCmsProducts(prods)
+          }
+        })
+      }
     }
+
+    fetchFreshProducts()
+
+    // Zero-delay auto-update: Whenever user switches back from WordPress Admin tab,
+    // immediately re-fetch the latest published changes!
+    const handleRevalidate = () => {
+      if (document.visibilityState === 'visible') {
+        fetchFreshProducts()
+      }
+    }
+
+    window.addEventListener('focus', handleRevalidate)
+    document.addEventListener('visibilitychange', handleRevalidate)
+
     return () => {
       mounted = false
+      window.removeEventListener('focus', handleRevalidate)
+      document.removeEventListener('visibilitychange', handleRevalidate)
     }
   }, [activeSlug])
 

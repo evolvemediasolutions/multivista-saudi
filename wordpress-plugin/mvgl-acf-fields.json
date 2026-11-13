@@ -241,66 +241,105 @@
   },
   {
     "key": "group_product_fields",
-    "title": "Product Details (Bilingual)",
+    "title": "Product Details & Partner Assignment",
     "fields": [
       {
-        "key": "field_product_category",
-        "label": "Category",
-        "name": "category",
+        "key": "field_product_partner",
+        "label": "Associated Partner",
+        "name": "partner",
         "type": "select",
+        "instructions": "Select which Technology Partner this product belongs to",
+        "required": 1,
         "choices": {
-          "mechanical": "Air & Gas / Mechanical Solutions",
-          "cooling": "Refrigeration & HVAC",
-          "automation": "Automation & Control",
-          "materials": "Non-Metallic Solutions"
+          "kirloskar-pneumatic": "Kirloskar Pneumatic (Air & Gas / Refrigeration)",
+          "kirloskar-chillers": "Kirloskar Chillers (HVAC & Process Cooling)",
+          "rockwell-automation": "Rockwell Automation (Industrial Automation)",
+          "spp-pumps": "SPP Pumps (Fire Protection & Critical Pumps)",
+          "epp-composites": "EPP Composites (FRP/GRP Non-Metallic)",
+          "hms-networks": "HMS Networks (Industrial Communication)",
+          "prosoft-technology": "ProSoft Technology (Industrial Connectivity)"
         },
-        "default_value": "mechanical"
+        "default_value": "kirloskar-pneumatic"
+      },
+      {
+        "key": "field_product_solution",
+        "label": "Solution / Category Division",
+        "name": "solution",
+        "type": "select",
+        "instructions": "Which overarching division does this product belong to?",
+        "required": 1,
+        "choices": {
+          "air-gas-solutions": "Air & Gas Solutions",
+          "refrigeration-hvac-solutions": "Refrigeration & HVAC Solutions",
+          "automation-control": "Automation & Control Solutions",
+          "non-metallic-solutions": "Non-Metallic Solutions",
+          "fire-pump-solutions": "Fire Pump Solutions"
+        },
+        "default_value": "air-gas-solutions"
+      },
+      {
+        "key": "field_product_subcategory",
+        "label": "Product Sub-Category / Filter ID",
+        "name": "subcategory",
+        "type": "text",
+        "instructions": "e.g. controllers, drives, networks, screw, reciprocating, packages, chillers, piping, all",
+        "default_value": "all"
       },
       {
         "key": "field_product_title_en",
-        "label": "Title (English)",
+        "label": "Product Title (English)",
         "name": "title_en",
         "type": "text",
-        "required": 1
+        "required": 1,
+        "instructions": "Type English title. Arabic will be automatically fetched on save if left empty!"
       },
       {
         "key": "field_product_title_ar",
-        "label": "Title (Arabic)",
+        "label": "Product Title (Arabic / العربية)",
         "name": "title_ar",
         "type": "text",
-        "required": 1
+        "instructions": "Leave empty to auto-fetch Arabic translation automatically, or enter custom Arabic."
+      },
+      {
+        "key": "field_product_specs_en",
+        "label": "Specifications & Features (English)",
+        "name": "specs_en",
+        "type": "text",
+        "instructions": "e.g. Capacity: 22 to 1047 cfm | Pressure Range: 7.5 to 13 kg/cm²"
+      },
+      {
+        "key": "field_product_specs_ar",
+        "label": "Specifications & Features (Arabic / العربية)",
+        "name": "specs_ar",
+        "type": "text",
+        "instructions": "Leave empty to auto-fetch Arabic translation automatically."
       },
       {
         "key": "field_product_description_en",
         "label": "Description (English)",
         "name": "description_en",
         "type": "textarea",
-        "rows": 4
+        "rows": 4,
+        "instructions": "Type English description. Arabic will be automatically fetched on save if left empty!"
       },
       {
         "key": "field_product_description_ar",
-        "label": "Description (Arabic)",
+        "label": "Description (Arabic / العربية)",
         "name": "description_ar",
         "type": "textarea",
-        "rows": 4
+        "rows": 4,
+        "instructions": "Leave empty to auto-fetch Arabic translation automatically."
       },
       {
-        "key": "field_product_features_en",
-        "label": "Features (English - One per line)",
-        "name": "features_en",
-        "type": "textarea",
-        "rows": 4
-      },
-      {
-        "key": "field_product_features_ar",
-        "label": "Features (Arabic - One per line)",
-        "name": "features_ar",
-        "type": "textarea",
-        "rows": 4
+        "key": "field_product_explore_url",
+        "label": "Explore Product Link (Custom URL)",
+        "name": "explore_url",
+        "type": "url",
+        "instructions": "Custom URL to open when user clicks 'Explore Product' in the popup (e.g. https://www.rockwellautomation.com/... or a landing page). If left empty, falls back to the brochure PDF or contact inquiry."
       },
       {
         "key": "field_product_brochure",
-        "label": "Product Brochure (PDF)",
+        "label": "Product Brochure / Data Sheet (PDF)",
         "name": "brochure_pdf",
         "type": "file",
         "return_format": "url",

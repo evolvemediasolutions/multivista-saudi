@@ -11,13 +11,20 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * 1. Enable CORS for GraphQL Requests from React Frontend
+ * 1. Enable CORS & Zero-Delay Realtime Updates for GraphQL Requests
  */
 add_action('init', function() {
     if (!headers_sent()) {
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+        header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cache-Control, Pragma");
+        
+        // Disable proxy/browser caching on GraphQL requests so publishes reflect instantly with 0 delay
+        if (strpos($_SERVER['REQUEST_URI'] ?? '', 'graphql') !== false) {
+            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+            header("Pragma: no-cache");
+            header("Expires: 0");
+        }
     }
     
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
