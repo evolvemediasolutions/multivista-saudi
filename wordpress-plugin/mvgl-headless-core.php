@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.4.0
+ * Version: 2.4.1
  * Author: MVGL / Antigravity
  */
 
@@ -786,7 +786,15 @@ add_action('acf/save_post', function($post_id = 0) {
     
     // 5.3 Translate Career Fields
     if ($post_type === 'career') {
-        $simple_fields = ['title', 'department', 'designation', 'location', 'experience', 'employment_type', 'about_role', 'responsibilities', 'requirements'];
+        $post_title = get_the_title($post_id);
+        $title_en = get_field('title_en', $post_id);
+        if (empty($title_en) && !empty($post_title)) {
+            update_field('title_en', $post_title, $post_id);
+            $title_en = $post_title;
+        }
+        $ensure_ar($title_en, 'title_ar');
+
+        $simple_fields = ['department', 'designation', 'location', 'experience', 'employment_type', 'about_role', 'responsibilities', 'requirements'];
         foreach ($simple_fields as $f) {
             $ensure_ar(get_field($f . '_en', $post_id), $f . '_ar');
         }
@@ -872,9 +880,9 @@ add_action('admin_footer', function() {
             return str && /[\u0600-\u06FF]/.test(str);
         }
 
-        async function callTranslateApi(text) {
-            if (!text || !text.trim()) return '';
-            var trimmed = text.trim();
+        async function translateSingleChunk(chunk) {
+            var trimmed = chunk.trim();
+            if (!trimmed) return '';
 
             // Provider 1: Client-side MyMemory API (Fast, Free, CORS *, Never blocked by browser privacy/adblock)
             try {
@@ -924,6 +932,30 @@ add_action('admin_footer', function() {
             }
 
             return '';
+        }
+
+        async function callTranslateApi(text) {
+            if (!text || !text.trim()) return '';
+            var trimmed = text.trim();
+
+            // For multiline lists (responsibilities, requirements, about role)
+            if (trimmed.indexOf('\n') !== -1 && trimmed.length > 150) {
+                var lines = trimmed.split('\n');
+                var outLines = [];
+                for (var li = 0; li < lines.length; li++) {
+                    var line = lines[li];
+                    if (!line.trim()) {
+                        outLines.push('');
+                    } else {
+                        var translatedLine = await translateSingleChunk(line);
+                        outLines.push(translatedLine || line);
+                    }
+                }
+                var joined = outLines.join('\n');
+                if (hasArabic(joined)) return joined;
+            }
+
+            return await translateSingleChunk(trimmed);
         }
 
         function getFieldValue(name) {
@@ -1049,22 +1081,24 @@ add_action('admin_footer', function() {
 
                 var fieldPairs = [
                     { en: 'title_en', ar: 'title_ar', label: 'Title', fallbackEn: titleEnVal },
-                    { en: 'date_en', ar: 'date_ar', label: 'Date' },
-                    { en: 'time_en', ar: 'time_ar', label: 'Timing' },
-                    { en: 'location_en', ar: 'location_ar', label: 'Location' },
-                    { en: 'event_type_en', ar: 'event_type_ar', label: 'Event Type' },
-                    { en: 'description_en', ar: 'description_ar', label: 'Description' },
-                    { en: 'content_en', ar: 'content_ar', label: 'Content', fallbackEn: contentEnVal },
-                    { en: 'tag_en', ar: 'tag_ar', label: 'Tag' },
-                    { en: 'category_en', ar: 'category_ar', label: 'Category' },
-                    { en: 'excerpt_en', ar: 'excerpt_ar', label: 'Excerpt' },
-                    { en: 'read_time_en', ar: 'read_time_ar', label: 'Read Time' },
                     { en: 'specs_en', ar: 'specs_ar', label: 'Specifications' },
+                    { en: 'description_en', ar: 'description_ar', label: 'Description' },
+                    { en: 'category_en', ar: 'category_ar', label: 'Category' },
                     { en: 'department_en', ar: 'department_ar', label: 'Department' },
                     { en: 'designation_en', ar: 'designation_ar', label: 'Designation' },
+                    { en: 'location_en', ar: 'location_ar', label: 'Location' },
+                    { en: 'experience_en', ar: 'experience_ar', label: 'Experience' },
+                    { en: 'employment_type_en', ar: 'employment_type_ar', label: 'Employment Type' },
                     { en: 'about_role_en', ar: 'about_role_ar', label: 'About Role' },
                     { en: 'responsibilities_en', ar: 'responsibilities_ar', label: 'Responsibilities' },
-                    { en: 'requirements_en', ar: 'requirements_ar', label: 'Requirements' }
+                    { en: 'requirements_en', ar: 'requirements_ar', label: 'Requirements' },
+                    { en: 'date_en', ar: 'date_ar', label: 'Date' },
+                    { en: 'time_en', ar: 'time_ar', label: 'Timing' },
+                    { en: 'event_type_en', ar: 'event_type_ar', label: 'Event Type' },
+                    { en: 'content_en', ar: 'content_ar', label: 'Content', fallbackEn: contentEnVal },
+                    { en: 'tag_en', ar: 'tag_ar', label: 'Tag' },
+                    { en: 'excerpt_en', ar: 'excerpt_ar', label: 'Excerpt' },
+                    { en: 'read_time_en', ar: 'read_time_ar', label: 'Read Time' }
                 ];
 
                 var translatedCount = 0;
@@ -1130,9 +1164,16 @@ add_action('admin_footer', function() {
         }
 
         function injectTranslationControls() {
-            // 1. Inject Banner into every ACF Field Group Metabox
-            var postboxes = document.querySelectorAll('.acf-postbox, #group_blog_fields, #group_event_fields, #group_product_fields, #group_career_fields');
-            postboxes.forEach(function(box) {
+            // 1. Inject Banner into every ACF Field Group Metabox (Products, Careers, Events, Insights)
+            var postboxCandidates = Array.from(document.querySelectorAll('.acf-postbox, #acf-group_product_fields, #acf-group_career_fields, #acf-group_event_fields, #acf-group_blog_fields, #group_blog_fields, #group_event_fields, #group_product_fields, #group_career_fields, div[id*="group_product"], div[id*="group_career"], div[id*="group_event"], div[id*="group_blog"]'));
+            
+            document.querySelectorAll('.postbox').forEach(function(box) {
+                if ((box.querySelector('.acf-fields') || (box.id && box.id.indexOf('group_') !== -1)) && postboxCandidates.indexOf(box) === -1) {
+                    postboxCandidates.push(box);
+                }
+            });
+
+            postboxCandidates.forEach(function(box) {
                 if (box.querySelector('.mvgl-acf-translate-banner')) return;
 
                 var banner = document.createElement('div');
