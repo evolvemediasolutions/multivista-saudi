@@ -260,3 +260,4 @@ export const insightsData: InsightItem[] = [
     author: { en: 'Logistics & Trade Strategy', ar: 'استراتيجيات التجارة والخدمات اللوجستية' }
   }
 ]
+

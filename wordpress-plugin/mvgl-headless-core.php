@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.2.0
+ * Version: 2.3.0
  * Author: MVGL / Antigravity
  */
 
@@ -730,7 +730,18 @@ add_action('acf/save_post', function($post_id = 0) {
     
     // 5.2 Translate Event Fields
     if ($post_type === 'event') {
-        $simple_event_fields = ['title', 'date', 'time', 'location', 'event_type', 'description', 'content'];
+        $post_title = get_the_title($post_id);
+        $title_en = get_field('title_en', $post_id);
+        if (empty($title_en) && !empty($post_title)) {
+            update_field('title_en', $post_title, $post_id);
+            $title_en = $post_title;
+        }
+        $title_ar = get_field('title_ar', $post_id);
+        if (!empty($title_en) && empty($title_ar)) {
+            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
+        }
+
+        $simple_event_fields = ['date', 'time', 'location', 'event_type', 'description', 'content'];
         foreach ($simple_event_fields as $f) {
             $en = get_field($f . '_en', $post_id);
             $ar = get_field($f . '_ar', $post_id);
@@ -754,18 +765,16 @@ add_action('acf/save_post', function($post_id = 0) {
     
     // 5.4 Translate Blog Fields
     if ($post_type === 'post') {
+        $post_title = get_the_title($post_id);
+        $title_ar = get_field('title_ar', $post_id);
+        if (empty($title_ar) && !empty($post_title)) {
+            update_field('title_ar', mvgl_auto_translate_to_arabic($post_title), $post_id);
+        }
+
         $tag_en = get_field('tag_en', $post_id);
         $tag_ar = get_field('tag_ar', $post_id);
         if (!empty($tag_en) && empty($tag_ar)) {
             update_field('tag_ar', mvgl_auto_translate_to_arabic($tag_en), $post_id);
-        }
-        
-        $title_ar = get_field('title_ar', $post_id);
-        if (empty($title_ar)) {
-            $post_title = get_the_title($post_id);
-            if (!empty($post_title)) {
-                update_field('title_ar', mvgl_auto_translate_to_arabic($post_title), $post_id);
-            }
         }
         
         $excerpt_en = get_field('excerpt_en', $post_id);
@@ -794,76 +803,310 @@ add_action('acf/save_post', function($post_id = 0) {
 }, 20);
 
 /**
+ * 5.5 Backend AJAX Translation Fallback Handler
+ */
+add_action('wp_ajax_mvgl_ajax_translate', function() {
+    $text = sanitize_text_field($_POST['text'] ?? '');
+    if (empty($text)) {
+        wp_send_json_error('Empty text');
+    }
+    $translated = mvgl_auto_translate_to_arabic($text);
+    wp_send_json_success($translated);
+});
+
+/**
  * 6. Add Instant "✨ Auto-Translate to Arabic" Button in WordPress Admin UI
+ * Compatible with Gutenberg Block Editor, Classic Editor, and ACF Postboxes
  */
 add_action('admin_footer', function() {
     global $post;
     if (!$post) return;
     ?>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var publishBox = document.getElementById('major-publishing-actions') || document.querySelector('.edit-post-header__settings');
-        if (!publishBox) return;
+    (function() {
+        var isTranslating = false;
 
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'button button-secondary';
-        btn.innerHTML = '✨ Auto-Translate to Arabic';
-        btn.style.margin = '8px 0';
-        btn.style.width = '100%';
-        btn.style.fontWeight = 'bold';
-        btn.style.color = '#1e3a8a';
-        btn.style.borderColor = '#3b82f6';
+        async function callTranslateApi(text) {
+            if (!text || !text.trim()) return '';
+            var trimmed = text.trim();
 
-        btn.onclick = async function() {
-            btn.innerHTML = '⏳ Translating to Arabic...';
-            btn.disabled = true;
-
-            async function translate(val) {
-                if (!val || !val.trim()) return '';
-                try {
-                    var res = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(val.trim()));
-                    var json = await res.json();
-                    if (json && json[0]) {
-                        return json[0].map(function(s) { return s[0]; }).join('');
+            // 1. Try Client-side Google Translate
+            try {
+                var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(trimmed);
+                var res = await fetch(url);
+                if (res.ok) {
+                    var data = await res.json();
+                    if (data && data[0]) {
+                        var resText = data[0].map(function(s) { return s[0]; }).join('');
+                        if (resText && resText.trim()) return resText.trim();
                     }
-                } catch(e) {}
-                return val;
+                }
+            } catch(e) {
+                console.warn('[MVGL Translator] Client-side fetch failed, trying AJAX fallback...', e);
             }
 
-            var pairs = [
-                { en: 'title_en', ar: 'title_ar' },
-                { en: 'specs_en', ar: 'specs_ar' },
-                { en: 'description_en', ar: 'description_ar' },
-                { en: 'location_en', ar: 'location_ar' },
-                { en: 'date_en', ar: 'date_ar' },
-                { en: 'department_en', ar: 'department_ar' },
-                { en: 'designation_en', ar: 'designation_ar' },
-                { en: 'about_role_en', ar: 'about_role_ar' },
-                { en: 'responsibilities_en', ar: 'responsibilities_ar' },
-                { en: 'requirements_en', ar: 'requirements_ar' },
-                { en: 'tag_en', ar: 'tag_ar' },
-                { en: 'excerpt_en', ar: 'excerpt_ar' }
-            ];
+            // 2. Fallback to WordPress backend AJAX endpoint
+            try {
+                if (typeof ajaxurl !== 'undefined') {
+                    var formData = new FormData();
+                    formData.append('action', 'mvgl_ajax_translate');
+                    formData.append('text', trimmed);
+                    var res2 = await fetch(ajaxurl, { method: 'POST', body: formData });
+                    var json2 = await res2.json();
+                    if (json2 && json2.success && json2.data) {
+                        return json2.data;
+                    }
+                }
+            } catch(e2) {
+                console.error('[MVGL Translator] AJAX fallback failed:', e2);
+            }
 
-            for (var i = 0; i < pairs.length; i++) {
-                var enEl = document.querySelector('[name="acf[' + pairs[i].en + ']"]') || document.querySelector('[name*="' + pairs[i].en + '"]');
-                var arEl = document.querySelector('[name="acf[' + pairs[i].ar + ']"]') || document.querySelector('[name*="' + pairs[i].ar + '"]');
-                if (enEl && arEl && enEl.value && (!arEl.value || arEl.value === enEl.value)) {
-                    arEl.value = await translate(enEl.value);
+            return trimmed;
+        }
+
+        function getFieldValue(name) {
+            // 1. Look for ACF field wrapper by data-name
+            var field = document.querySelector('.acf-field[data-name="' + name + '"]');
+            if (field) {
+                var ta = field.querySelector('textarea');
+                if (ta && ta.id && window.tinyMCE && tinyMCE.get(ta.id)) {
+                    var html = tinyMCE.get(ta.id).getContent();
+                    if (html && html.trim()) return html.trim();
+                }
+                var input = field.querySelector('input[type="text"], textarea, select');
+                if (input && input.value && input.value.trim()) return input.value.trim();
+            }
+
+            // 2. Direct attribute match
+            var direct = document.querySelector('[name*="' + name + '"]');
+            if (direct && direct.value && direct.value.trim()) return direct.value.trim();
+
+            return '';
+        }
+
+        function setFieldValue(name, value) {
+            if (!value) return;
+            var field = document.querySelector('.acf-field[data-name="' + name + '"]');
+            if (field) {
+                var ta = field.querySelector('textarea');
+                if (ta && ta.id && window.tinyMCE && tinyMCE.get(ta.id)) {
+                    tinyMCE.get(ta.id).setContent(value);
+                    ta.value = value;
+                    highlightField(field);
+                    return;
+                }
+                var input = field.querySelector('input[type="text"], textarea, select');
+                if (input) {
+                    input.value = value;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    highlightField(field);
+                    return;
                 }
             }
 
-            btn.innerHTML = '✅ Arabic Translated!';
-            setTimeout(function() {
-                btn.innerHTML = '✨ Auto-Translate to Arabic';
-                btn.disabled = false;
-            }, 3000);
-        };
+            var direct = document.querySelector('[name*="' + name + '"]');
+            if (direct) {
+                direct.value = value;
+                direct.dispatchEvent(new Event('input', { bubbles: true }));
+                direct.dispatchEvent(new Event('change', { bubbles: true }));
+                highlightField(direct);
+            }
+        }
 
-        var container = document.getElementById('submitpost') || publishBox;
-        container.insertBefore(btn, container.firstChild);
-    });
+        function highlightField(el) {
+            if (!el) return;
+            el.style.transition = 'all 0.4s ease';
+            var prevBg = el.style.backgroundColor;
+            el.style.backgroundColor = '#dcfce7';
+            setTimeout(function() {
+                el.style.backgroundColor = prevBg || '';
+            }, 1500);
+        }
+
+        // Main translation workflow
+        async function runAutoTranslation(buttonEl) {
+            if (isTranslating) return;
+            isTranslating = true;
+
+            var origHtml = buttonEl.innerHTML;
+            buttonEl.disabled = true;
+            buttonEl.innerHTML = '⏳ Translating to Arabic...';
+
+            try {
+                // If title_en is empty, check standard WordPress post title
+                var titleEnVal = getFieldValue('title_en');
+                if (!titleEnVal) {
+                    var wpTitleInput = document.querySelector('#title') ||
+                                       document.querySelector('[name="post_title"]') ||
+                                       document.querySelector('.editor-post-title__input');
+                    if (wpTitleInput) {
+                        var rawTitle = wpTitleInput.value || wpTitleInput.innerText || '';
+                        if (rawTitle.trim()) {
+                            titleEnVal = rawTitle.trim();
+                            setFieldValue('title_en', titleEnVal);
+                        }
+                    }
+                }
+
+                // If content_en is empty on post/insight, check standard WordPress content
+                var contentEnVal = getFieldValue('content_en');
+                if (!contentEnVal) {
+                    if (window.tinyMCE && tinyMCE.get('content')) {
+                        contentEnVal = tinyMCE.get('content').getContent();
+                    } else {
+                        var wpContent = document.querySelector('#content');
+                        if (wpContent && wpContent.value) contentEnVal = wpContent.value;
+                    }
+                }
+
+                var fieldPairs = [
+                    { en: 'title_en', ar: 'title_ar', label: 'Title', fallbackEn: titleEnVal },
+                    { en: 'date_en', ar: 'date_ar', label: 'Date' },
+                    { en: 'time_en', ar: 'time_ar', label: 'Timing' },
+                    { en: 'location_en', ar: 'location_ar', label: 'Location' },
+                    { en: 'event_type_en', ar: 'event_type_ar', label: 'Event Type' },
+                    { en: 'description_en', ar: 'description_ar', label: 'Description' },
+                    { en: 'content_en', ar: 'content_ar', label: 'Content', fallbackEn: contentEnVal },
+                    { en: 'tag_en', ar: 'tag_ar', label: 'Tag' },
+                    { en: 'excerpt_en', ar: 'excerpt_ar', label: 'Excerpt' },
+                    { en: 'read_time_en', ar: 'read_time_ar', label: 'Read Time' },
+                    { en: 'specs_en', ar: 'specs_ar', label: 'Specifications' },
+                    { en: 'department_en', ar: 'department_ar', label: 'Department' },
+                    { en: 'designation_en', ar: 'designation_ar', label: 'Designation' },
+                    { en: 'about_role_en', ar: 'about_role_ar', label: 'About Role' },
+                    { en: 'responsibilities_en', ar: 'responsibilities_ar', label: 'Responsibilities' },
+                    { en: 'requirements_en', ar: 'requirements_ar', label: 'Requirements' }
+                ];
+
+                var translatedCount = 0;
+
+                for (var i = 0; i < fieldPairs.length; i++) {
+                    var pair = fieldPairs[i];
+                    var enText = getFieldValue(pair.en) || pair.fallbackEn || '';
+                    if (!enText || !enText.trim()) continue;
+
+                    buttonEl.innerHTML = '⏳ Translating ' + pair.label + '...';
+
+                    // Translate if Arabic is empty or matches English
+                    var arText = getFieldValue(pair.ar);
+                    if (!arText || arText.trim() === '' || arText.trim() === enText.trim()) {
+                        var arabic = await callTranslateApi(enText);
+                        if (arabic) {
+                            setFieldValue(pair.ar, arabic);
+                            translatedCount++;
+                        }
+                    }
+                }
+
+                buttonEl.innerHTML = '✅ ' + (translatedCount > 0 ? (translatedCount + ' Fields Translated!') : 'Arabic Up To Date!');
+                buttonEl.style.backgroundColor = '#16a34a';
+                buttonEl.style.borderColor = '#15803d';
+
+                setTimeout(function() {
+                    buttonEl.innerHTML = origHtml;
+                    buttonEl.disabled = false;
+                    buttonEl.style.backgroundColor = '';
+                    buttonEl.style.borderColor = '';
+                    isTranslating = false;
+                }, 3500);
+
+            } catch (err) {
+                console.error('[MVGL Translator Error]', err);
+                buttonEl.innerHTML = '❌ Translation Error';
+                setTimeout(function() {
+                    buttonEl.innerHTML = origHtml;
+                    buttonEl.disabled = false;
+                    isTranslating = false;
+                }, 3000);
+            }
+        }
+
+        function createTranslateButton(extraClasses) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'button button-primary mvgl-translate-action-btn ' + (extraClasses || '');
+            btn.innerHTML = '✨ Auto-Translate to Arabic';
+            btn.style.fontWeight = 'bold';
+            btn.style.backgroundColor = '#2563eb';
+            btn.style.borderColor = '#1d4ed8';
+            btn.style.color = '#ffffff';
+            btn.style.cursor = 'pointer';
+            btn.style.borderRadius = '6px';
+            btn.style.transition = 'all 0.2s ease';
+
+            btn.onclick = function(e) {
+                e.preventDefault();
+                runAutoTranslation(btn);
+            };
+            return btn;
+        }
+
+        function injectTranslationControls() {
+            // 1. Inject Banner into every ACF Field Group Metabox
+            var postboxes = document.querySelectorAll('.acf-postbox, #group_blog_fields, #group_event_fields, #group_product_fields, #group_career_fields');
+            postboxes.forEach(function(box) {
+                if (box.querySelector('.mvgl-acf-translate-banner')) return;
+
+                var banner = document.createElement('div');
+                banner.className = 'mvgl-acf-translate-banner';
+                banner.style.cssText = 'background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; margin: 12px 14px 16px 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);';
+
+                var info = document.createElement('div');
+                info.innerHTML = '<strong style="color:#38bdf8; font-size:13px; display:block; margin-bottom:2px;">🌍 MVGL Arabic Auto-Translator</strong>' +
+                                 '<span style="color:#94a3b8; font-size:12px;">Fill in English details, then click to automatically translate all fields to Arabic instantly.</span>';
+
+                var actionBtn = createTranslateButton();
+                actionBtn.style.padding = '6px 18px';
+                actionBtn.style.fontSize = '13px';
+                actionBtn.style.backgroundColor = '#10b981';
+                actionBtn.style.borderColor = '#059669';
+
+                banner.appendChild(info);
+                banner.appendChild(actionBtn);
+
+                var inside = box.querySelector('.inside') || box;
+                inside.insertBefore(banner, inside.firstChild);
+            });
+
+            // 2. Inject into Classic Editor Submit Box
+            var submitPost = document.getElementById('submitpost') || document.getElementById('major-publishing-actions');
+            if (submitPost && !submitPost.querySelector('.mvgl-sidebar-translate-btn')) {
+                var sideBtn = createTranslateButton('mvgl-sidebar-translate-btn');
+                sideBtn.style.width = '100%';
+                sideBtn.style.margin = '8px 0';
+                sideBtn.style.padding = '8px 12px';
+                submitPost.insertBefore(sideBtn, submitPost.firstChild);
+            }
+
+            // 3. Inject into Gutenberg Block Editor Toolbar / Settings
+            var gutenbergHeader = document.querySelector('.edit-post-header__settings') || document.querySelector('.editor-header__settings');
+            if (gutenbergHeader && !document.querySelector('.mvgl-gutenberg-translate-btn')) {
+                var gBtn = createTranslateButton('mvgl-gutenberg-translate-btn');
+                gBtn.style.marginRight = '8px';
+                gBtn.style.marginLeft = '8px';
+                gBtn.style.height = '32px';
+                gBtn.style.lineHeight = '30px';
+                gutenbergHeader.insertBefore(gBtn, gutenbergHeader.firstChild);
+            }
+        }
+
+        // Initialize immediately and poll briefly for React/Gutenberg rendering
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectTranslationControls);
+        } else {
+            injectTranslationControls();
+        }
+
+        // Retry checks to guarantee injection in Gutenberg as panels load
+        var pollCount = 0;
+        var poller = setInterval(function() {
+            pollCount++;
+            injectTranslationControls();
+            if (pollCount >= 12) clearInterval(poller);
+        }, 800);
+
+    })();
     </script>
     <?php
 });
