@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.1.0
+ * Version: 2.2.0
  * Author: MVGL / Antigravity
  */
 
@@ -37,12 +37,12 @@ add_action('init', function() {
  * 2. Automatic Google Translate to Arabic Helper
  */
 if (!function_exists('mvgl_auto_translate_to_arabic')) {
-    function mvgl_auto_translate_to_arabic($text) {
-        if (empty(trim($text))) {
+    function mvgl_auto_translate_to_arabic($text = '') {
+        if (empty(trim((string)$text))) {
             return '';
         }
         
-        $encoded = urlencode(trim($text));
+        $encoded = urlencode(trim((string)$text));
         $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
         
         $response = wp_remote_get($url, [
@@ -326,6 +326,20 @@ add_action('acf/init', function() {
                 'instructions' => 'Leave empty to auto-translate from English.',
             ],
             [
+                'key' => 'field_event_time_en',
+                'label' => 'Timing / Hours (English)',
+                'name' => 'time_en',
+                'type' => 'text',
+                'instructions' => 'e.g. 09:00 AM – 05:00 PM (AST)',
+            ],
+            [
+                'key' => 'field_event_time_ar',
+                'label' => 'Timing / Hours (Arabic)',
+                'name' => 'time_ar',
+                'type' => 'text',
+                'instructions' => 'Leave empty to auto-translate from English.',
+            ],
+            [
                 'key' => 'field_event_location_en',
                 'label' => 'Location (English)',
                 'name' => 'location_en',
@@ -341,19 +355,67 @@ add_action('acf/init', function() {
                 'instructions' => 'Leave empty to auto-translate from English.',
             ],
             [
+                'key' => 'field_event_type_en',
+                'label' => 'Event Type / Category (English)',
+                'name' => 'event_type_en',
+                'type' => 'text',
+                'instructions' => 'e.g. Technical Exhibition & Conference, Industry Forum, Webinar',
+                'default_value' => 'Technical Exhibition & Conference',
+            ],
+            [
+                'key' => 'field_event_type_ar',
+                'label' => 'Event Type / Category (Arabic)',
+                'name' => 'event_type_ar',
+                'type' => 'text',
+                'instructions' => 'Leave empty to auto-translate.',
+            ],
+            [
+                'key' => 'field_event_status',
+                'label' => 'Event Status',
+                'name' => 'status',
+                'type' => 'select',
+                'choices' => [
+                    'upcoming' => 'Upcoming Event',
+                    'ongoing' => 'Happening Now',
+                    'past' => 'Past / Completed',
+                ],
+                'default_value' => 'upcoming',
+            ],
+            [
                 'key' => 'field_event_description_en',
-                'label' => 'Description (English)',
+                'label' => 'Short Summary (English)',
                 'name' => 'description_en',
                 'type' => 'textarea',
-                'rows' => 4,
+                'rows' => 3,
             ],
             [
                 'key' => 'field_event_description_ar',
-                'label' => 'Description (Arabic)',
+                'label' => 'Short Summary (Arabic)',
                 'name' => 'description_ar',
                 'type' => 'textarea',
-                'rows' => 4,
+                'rows' => 3,
                 'instructions' => 'Leave empty to auto-translate from English.',
+            ],
+            [
+                'key' => 'field_event_content_en',
+                'label' => 'Full Event Content & Highlights (English)',
+                'name' => 'content_en',
+                'type' => 'wysiwyg',
+                'instructions' => 'Detailed event overview, exhibit highlights, schedule, and participation details.',
+            ],
+            [
+                'key' => 'field_event_content_ar',
+                'label' => 'Full Event Content & Highlights (Arabic)',
+                'name' => 'content_ar',
+                'type' => 'wysiwyg',
+                'instructions' => 'Leave empty to auto-translate from English.',
+            ],
+            [
+                'key' => 'field_event_registration_url',
+                'label' => 'Registration / External Event URL',
+                'name' => 'registration_url',
+                'type' => 'url',
+                'instructions' => 'Optional link to official exhibition registration, summit page, or tickets.',
             ],
         ],
         'location' => [
@@ -574,6 +636,37 @@ add_action('acf/init', function() {
                 'rows' => 3,
                 'instructions' => 'Leave empty to auto-translate.',
             ],
+            [
+                'key' => 'field_blog_content_ar',
+                'label' => 'Article Content (Arabic / العربية)',
+                'name' => 'content_ar',
+                'type' => 'wysiwyg',
+                'instructions' => 'Detailed article text in Arabic. Leave empty to auto-translate from standard post content.',
+            ],
+            [
+                'key' => 'field_blog_read_time_en',
+                'label' => 'Estimated Read Time (English)',
+                'name' => 'read_time_en',
+                'type' => 'text',
+                'instructions' => 'e.g. 5 min read',
+                'default_value' => '5 min read',
+            ],
+            [
+                'key' => 'field_blog_read_time_ar',
+                'label' => 'Estimated Read Time (Arabic)',
+                'name' => 'read_time_ar',
+                'type' => 'text',
+                'instructions' => 'e.g. ٥ دقائق قراءة',
+                'default_value' => '٥ دقائق قراءة',
+            ],
+            [
+                'key' => 'field_blog_author_name',
+                'label' => 'Author Byline / Team',
+                'name' => 'author_name',
+                'type' => 'text',
+                'instructions' => 'e.g. MVGL Industrial Engineering Team',
+                'default_value' => 'MVGL Engineering Team',
+            ],
         ],
         'location' => [
             [
@@ -594,15 +687,25 @@ add_action('acf/init', function() {
  * Whenever any item is saved in WordPress, if the user typed in English,
  * it automatically fetches the exact Arabic translation!
  */
-add_action('acf/save_post', function($post_id) {
+add_action('acf/save_post', function($post_id = 0) {
+    if (empty($post_id)) {
+        return;
+    }
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
-    if (wp_is_post_revision($post_id)) {
+    if (function_exists('wp_is_post_revision') && wp_is_post_revision($post_id)) {
+        return;
+    }
+    if (!function_exists('get_field') || !function_exists('update_field')) {
         return;
     }
     
     $post_type = get_post_type($post_id);
+    if (!$post_type) {
+        return;
+    }
+
     
     // 5.1 Translate Product Fields
     if ($post_type === 'product') {
@@ -627,28 +730,13 @@ add_action('acf/save_post', function($post_id) {
     
     // 5.2 Translate Event Fields
     if ($post_type === 'event') {
-        $title_en = get_field('title_en', $post_id);
-        $title_ar = get_field('title_ar', $post_id);
-        if (!empty($title_en) && empty($title_ar)) {
-            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
-        }
-        
-        $date_en = get_field('date_en', $post_id);
-        $date_ar = get_field('date_ar', $post_id);
-        if (!empty($date_en) && empty($date_ar)) {
-            update_field('date_ar', mvgl_auto_translate_to_arabic($date_en), $post_id);
-        }
-        
-        $loc_en = get_field('location_en', $post_id);
-        $loc_ar = get_field('location_ar', $post_id);
-        if (!empty($loc_en) && empty($loc_ar)) {
-            update_field('location_ar', mvgl_auto_translate_to_arabic($loc_en), $post_id);
-        }
-        
-        $desc_en = get_field('description_en', $post_id);
-        $desc_ar = get_field('description_ar', $post_id);
-        if (!empty($desc_en) && empty($desc_ar)) {
-            update_field('description_ar', mvgl_auto_translate_to_arabic($desc_en), $post_id);
+        $simple_event_fields = ['title', 'date', 'time', 'location', 'event_type', 'description', 'content'];
+        foreach ($simple_event_fields as $f) {
+            $en = get_field($f . '_en', $post_id);
+            $ar = get_field($f . '_ar', $post_id);
+            if (!empty($en) && empty($ar)) {
+                update_field($f . '_ar', mvgl_auto_translate_to_arabic($en), $post_id);
+            }
         }
     }
     
@@ -684,6 +772,23 @@ add_action('acf/save_post', function($post_id) {
         $excerpt_ar = get_field('excerpt_ar', $post_id);
         if (!empty($excerpt_en) && empty($excerpt_ar)) {
             update_field('excerpt_ar', mvgl_auto_translate_to_arabic($excerpt_en), $post_id);
+        }
+
+        $read_en = get_field('read_time_en', $post_id);
+        $read_ar = get_field('read_time_ar', $post_id);
+        if (!empty($read_en) && empty($read_ar)) {
+            update_field('read_time_ar', mvgl_auto_translate_to_arabic($read_en), $post_id);
+        }
+
+        $content_ar = get_field('content_ar', $post_id);
+        if (empty($content_ar)) {
+            $post_obj = get_post($post_id);
+            if (!empty($post_obj->post_content)) {
+                $clean_text = wp_strip_all_tags($post_obj->post_content);
+                if (strlen($clean_text) < 2500) {
+                    update_field('content_ar', mvgl_auto_translate_to_arabic($clean_text), $post_id);
+                }
+            }
         }
     }
 }, 20);
@@ -767,7 +872,7 @@ add_action('admin_footer', function() {
  * Helper: Find existing post safely without deprecated functions
  */
 if (!function_exists('mvgl_find_post')) {
-    function mvgl_find_post($slug_or_title, $post_type) {
+    function mvgl_find_post($slug_or_title = '', $post_type = 'product') {
         if (empty($slug_or_title)) return null;
 
         // Try lookup by post_name (slug)
@@ -905,7 +1010,7 @@ function mvgl_render_import_products_page() {
 /**
  * 8. Custom Admin Columns & Meta Box for Job Applications
  */
-add_filter('manage_job_application_posts_columns', function($columns) {
+add_filter('manage_job_application_posts_columns', function($columns = []) {
     return [
         'cb' => '<input type="checkbox" />',
         'title' => 'Applicant Name',
@@ -917,7 +1022,8 @@ add_filter('manage_job_application_posts_columns', function($columns) {
     ];
 });
 
-add_action('manage_job_application_posts_custom_column', function($column, $post_id) {
+add_action('manage_job_application_posts_custom_column', function($column = '', $post_id = 0) {
+    if (empty($post_id)) return;
     if ($column === 'job_info') {
         $title = get_post_meta($post_id, '_job_title', true) ?: '-';
         $code = get_post_meta($post_id, '_job_code', true);
@@ -1027,7 +1133,10 @@ add_action('rest_api_init', function() {
 });
 
 if (!function_exists('mvgl_handle_job_application_submission')) {
-function mvgl_handle_job_application_submission($request) {
+function mvgl_handle_job_application_submission($request = null) {
+    if (!$request) {
+        return new WP_Error('invalid_request', 'Invalid request', ['status' => 400]);
+    }
     header("Access-Control-Allow-Origin: *");
     header("Access-Control-Allow-Methods: POST, OPTIONS");
     header("Access-Control-Allow-Headers: Content-Type, Authorization");
@@ -1204,6 +1313,239 @@ function mvgl_render_import_careers_page() {
                 <?php wp_nonce_field('mvgl_import_careers_nonce'); ?>
                 <p>
                     <input type="submit" name="mvgl_do_import_careers" class="button button-primary button-hero" value="🚀 Import / Sync All 6 Frontend Openings to CMS" onclick="return confirm('Import all 6 frontend openings into WordPress? Existing positions will be updated safely without duplicates.');" style="font-weight:bold; height:46px; line-height:44px; padding:0 28px;">
+                </p>
+            </form>
+        </div>
+    </div>
+    <?php
+}
+}
+
+/**
+ * 11. One-Click Importer to Seed All Events into WordPress
+ */
+add_action('admin_menu', function() {
+    add_submenu_page(
+        'edit.php?post_type=event',
+        'Import Frontend Events',
+        '📥 Import All Events',
+        'manage_options',
+        'mvgl-import-events',
+        'mvgl_render_import_events_page'
+    );
+});
+
+if (!function_exists('mvgl_render_import_events_page')) {
+function mvgl_render_import_events_page() {
+    $seed_file = __DIR__ . '/frontend-events-seed.json';
+    $message = '';
+
+    if (isset($_POST['mvgl_do_import_events']) && check_admin_referer('mvgl_import_events_nonce')) {
+        if (!file_exists($seed_file)) {
+            $message = '<div class="notice notice-error"><p>Seed file frontend-events-seed.json not found in plugin directory.</p></div>';
+        } else {
+            $json_data = file_get_contents($seed_file);
+            $events = json_decode($json_data, true);
+            $imported = 0;
+            $updated = 0;
+
+            if (is_array($events)) {
+                foreach ($events as $ev) {
+                    $title_en = sanitize_text_field($ev['title_en'] ?? '');
+                    $slug = sanitize_title($ev['slug'] ?? '');
+                    if (empty($title_en)) continue;
+
+                    $existing = mvgl_find_post($slug, 'event');
+                    if (!$existing) {
+                        $existing = mvgl_find_post($title_en, 'event');
+                    }
+
+                    if ($existing) {
+                        $post_id = $existing->ID;
+                        $updated++;
+                    } else {
+                        $post_id = wp_insert_post([
+                            'post_title' => $title_en,
+                            'post_name' => $slug,
+                            'post_type' => 'event',
+                            'post_status' => 'publish',
+                            'post_content' => $ev['content_en'] ?? '',
+                        ]);
+                        $imported++;
+                    }
+
+                    if ($post_id && !is_wp_error($post_id)) {
+                        $meta_map = [
+                            'title_en' => $title_en,
+                            'title_ar' => $ev['title_ar'] ?? '',
+                            'date_en' => $ev['date_en'] ?? '',
+                            'date_ar' => $ev['date_ar'] ?? '',
+                            'time_en' => $ev['time_en'] ?? '',
+                            'time_ar' => $ev['time_ar'] ?? '',
+                            'location_en' => $ev['location_en'] ?? '',
+                            'location_ar' => $ev['location_ar'] ?? '',
+                            'event_type_en' => $ev['event_type_en'] ?? 'Technical Exhibition & Conference',
+                            'event_type_ar' => $ev['event_type_ar'] ?? 'مؤتمر ومعرض تقني',
+                            'status' => $ev['status'] ?? 'upcoming',
+                            'description_en' => $ev['description_en'] ?? '',
+                            'description_ar' => $ev['description_ar'] ?? '',
+                            'content_en' => $ev['content_en'] ?? '',
+                            'content_ar' => $ev['content_ar'] ?? '',
+                            'registration_url' => $ev['registration_url'] ?? '',
+                        ];
+
+                        foreach ($meta_map as $key => $val) {
+                            if (function_exists('update_field')) {
+                                update_field($key, $val, $post_id);
+                            } else {
+                                update_post_meta($post_id, $key, $val);
+                            }
+                        }
+                    }
+                }
+                $message = '<div class="notice notice-success is-dismissible" style="padding:12px; margin:16px 0;"><p style="font-size:15px;">🎉 <strong>Events Imported Successfully!</strong> ' . $imported . ' events created, ' . $updated . ' events updated. All events can now be edited under <strong>Events &gt; All Events</strong>.</p></div>';
+            }
+        }
+    }
+
+    ?>
+    <div class="wrap" style="max-width: 900px; padding: 20px 0;">
+        <h1>📥 Import Frontend Events to WordPress CMS</h1>
+        <div style="background:#fff; border:1px solid #ccd0d4; padding:24px; border-radius:10px; margin-top:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <h2 style="margin-top:0;">Manage All Events Directly From WordPress</h2>
+            <p style="font-size:14px; line-height:1.6; color:#475569;">
+                This tool automatically imports all frontend events into your WordPress CMS as full, editable <code>Event</code> posts with complete bilingual dates, locations, event types, agendas, and registration links.
+            </p>
+            <ul style="list-style:disc; margin-left:24px; color:#475569; font-size:14px; line-height:1.7;">
+                <li><strong>SABIC Technical Conference 2026</strong> (Jubail Industrial City)</li>
+                <li><strong>Saudi Water Forum</strong> (Riyadh International Convention Center)</li>
+            </ul>
+            <p style="font-size:14px; color:#475569;">
+                Once imported, publishing or editing events will immediately reflect on the live website and generate full dynamic event detail pages!
+            </p>
+
+            <?php echo $message; ?>
+
+            <form method="post" style="margin-top:24px;">
+                <?php wp_nonce_field('mvgl_import_events_nonce'); ?>
+                <p>
+                    <input type="submit" name="mvgl_do_import_events" class="button button-primary button-hero" value="🚀 Import / Sync All Frontend Events to CMS" onclick="return confirm('Import all frontend events into WordPress? Existing events will be updated safely without duplicates.');" style="font-weight:bold; height:46px; line-height:44px; padding:0 28px;">
+                </p>
+            </form>
+        </div>
+    </div>
+    <?php
+}
+}
+
+/**
+ * 12. One-Click Importer to Seed All Insights (Posts) into WordPress
+ */
+add_action('admin_menu', function() {
+    add_submenu_page(
+        'edit.php',
+        'Import Frontend Insights',
+        '📥 Import All Insights',
+        'manage_options',
+        'mvgl-import-insights',
+        'mvgl_render_import_insights_page'
+    );
+});
+
+if (!function_exists('mvgl_render_import_insights_page')) {
+function mvgl_render_import_insights_page() {
+    $seed_file = __DIR__ . '/frontend-insights-seed.json';
+    $message = '';
+
+    if (isset($_POST['mvgl_do_import_insights']) && check_admin_referer('mvgl_import_insights_nonce')) {
+        if (!file_exists($seed_file)) {
+            $message = '<div class="notice notice-error"><p>Seed file frontend-insights-seed.json not found in plugin directory.</p></div>';
+        } else {
+            $json_data = file_get_contents($seed_file);
+            $insights = json_decode($json_data, true);
+            $imported = 0;
+            $updated = 0;
+
+            if (is_array($insights)) {
+                foreach ($insights as $item) {
+                    $title_en = sanitize_text_field($item['title_en'] ?? '');
+                    $slug = sanitize_title($item['slug'] ?? '');
+                    if (empty($title_en)) continue;
+
+                    $existing = mvgl_find_post($slug, 'post');
+                    if (!$existing) {
+                        $existing = mvgl_find_post($title_en, 'post');
+                    }
+
+                    if ($existing) {
+                        $post_id = $existing->ID;
+                        $updated++;
+                    } else {
+                        $post_id = wp_insert_post([
+                            'post_title' => $title_en,
+                            'post_name' => $slug,
+                            'post_type' => 'post',
+                            'post_status' => 'publish',
+                            'post_content' => $item['content_en'] ?? '',
+                            'post_excerpt' => $item['excerpt_en'] ?? '',
+                        ]);
+                        $imported++;
+                    }
+
+                    if ($post_id && !is_wp_error($post_id)) {
+                        $meta_map = [
+                            'tag_en' => $item['tag_en'] ?? 'INSIGHTS',
+                            'tag_ar' => $item['tag_ar'] ?? 'رؤى صناعية',
+                            'title_ar' => $item['title_ar'] ?? '',
+                            'excerpt_en' => $item['excerpt_en'] ?? '',
+                            'excerpt_ar' => $item['excerpt_ar'] ?? '',
+                            'content_ar' => $item['content_ar'] ?? '',
+                            'read_time_en' => $item['read_time_en'] ?? '5 min read',
+                            'read_time_ar' => $item['read_time_ar'] ?? '٥ دقائق قراءة',
+                            'author_name' => $item['author_name'] ?? 'MVGL Engineering Team',
+                        ];
+
+                        foreach ($meta_map as $key => $val) {
+                            if (function_exists('update_field')) {
+                                update_field($key, $val, $post_id);
+                            } else {
+                                update_post_meta($post_id, $key, $val);
+                            }
+                        }
+                    }
+                }
+                $message = '<div class="notice notice-success is-dismissible" style="padding:12px; margin:16px 0;"><p style="font-size:15px;">🎉 <strong>Insights Imported Successfully!</strong> ' . $imported . ' articles created, ' . $updated . ' articles updated. All 7 industrial insights can now be edited under <strong>Posts &gt; All Posts</strong>.</p></div>';
+            }
+        }
+    }
+
+    ?>
+    <div class="wrap" style="max-width: 900px; padding: 20px 0;">
+        <h1>📥 Import Frontend Insights to WordPress CMS</h1>
+        <div style="background:#fff; border:1px solid #ccd0d4; padding:24px; border-radius:10px; margin-top:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <h2 style="margin-top:0;">Manage All Industrial Insights &amp; Articles Directly From WordPress</h2>
+            <p style="font-size:14px; line-height:1.6; color:#475569;">
+                This tool imports all <strong>7 frontend industrial insights &amp; articles</strong> (including the Featured Insight) into your WordPress CMS as editable <code>Post</code> items with bilingual tags, excerpts, complete multi-paragraph article content, read times, and author bylines.
+            </p>
+            <ul style="list-style:disc; margin-left:24px; color:#475569; font-size:14px; line-height:1.7;">
+                <li><strong>SUPPLY CHAIN:</strong> Building Resilient Industrial Supply Chains in Saudi Arabia (Featured)</li>
+                <li><strong>DIGITALIZATION:</strong> Smart Technologies for the Transformation of Industry</li>
+                <li><strong>ROBOTICS:</strong> Collaborative Robots: Shaping the Future of Manufacturing</li>
+                <li><strong>AUTOMATION:</strong> Advancing Control Systems through Connected Devices</li>
+                <li><strong>MATERIALS:</strong> The Rise of Advanced Composites in Heavy Industry</li>
+                <li><strong>ENERGY:</strong> Optimizing Cooling Systems for Energy Efficiency</li>
+                <li><strong>LOGISTICS:</strong> Navigating Global Trade and Port Performance</li>
+            </ul>
+            <p style="font-size:14px; color:#475569;">
+                Once imported, you can edit content, write new articles, publish them, and dynamic article pages will generate on the website automatically!
+            </p>
+
+            <?php echo $message; ?>
+
+            <form method="post" style="margin-top:24px;">
+                <?php wp_nonce_field('mvgl_import_insights_nonce'); ?>
+                <p>
+                    <input type="submit" name="mvgl_do_import_insights" class="button button-primary button-hero" value="🚀 Import / Sync All 7 Frontend Insights to CMS" onclick="return confirm('Import all 7 frontend insights into WordPress? Existing articles will be updated safely without duplicates.');" style="font-weight:bold; height:46px; line-height:44px; padding:0 28px;">
                 </p>
             </form>
         </div>

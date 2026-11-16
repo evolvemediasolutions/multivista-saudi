@@ -299,7 +299,7 @@ export default function PartnerDetail() {
           ar: p.specs?.ar || p.specs?.en || '',
         },
         image: finalImage,
-        exploreUrl: p.exploreUrl || p.brochureUrl || '',
+        exploreUrl: p.exploreUrl || matchingStatic?.exploreUrl || p.brochureUrl || '',
         brochureUrl: p.brochureUrl,
       }
     })

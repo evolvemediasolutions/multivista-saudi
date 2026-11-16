@@ -2,10 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../context/LanguageContext'
 import { solutionsData } from '../data/solutions'
-import { getBlogs, type BlogPostItem } from '../services/graphql'
+import { getInsights, getCachedInsights, type InsightItem } from '../services/graphql'
+import { featuredInsight } from '../data/insights'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-type BlogPost = BlogPostItem
+type BlogPost = InsightItem
 
 export default function Insights() {
   const { locale, dir } = useLanguage()
@@ -13,6 +14,11 @@ export default function Insights() {
   const [subscribed, setSubscribed] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [scrollProgress, setScrollProgress] = useState(0)
+
+  // Initialize with cached insights for 0ms initial load
+  const cached = getCachedInsights()
+  const [featuredPost, setFeaturedPost] = useState<InsightItem>(() => cached[0] || featuredInsight)
+  const [posts, setPosts] = useState<BlogPost[]>(() => (cached.length > 1 ? cached.slice(1) : cached))
 
   const localizedPath = (path: string) => `/${locale}${path === '/' ? '' : path}`
 
@@ -38,6 +44,37 @@ export default function Insights() {
       setEmail('')
     }
   }
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadFreshInsights = () => {
+      getInsights().then((cmsPosts) => {
+        if (mounted && cmsPosts && cmsPosts.length > 0) {
+          setFeaturedPost(cmsPosts[0])
+          setPosts(cmsPosts.length > 1 ? cmsPosts.slice(1) : cmsPosts)
+        }
+      })
+    }
+
+    loadFreshInsights()
+
+    // Zero-delay auto-revalidation when user returns from WordPress Admin tab
+    const handleRevalidate = () => {
+      if (document.visibilityState === 'visible') {
+        loadFreshInsights()
+      }
+    }
+
+    window.addEventListener('focus', handleRevalidate)
+    document.addEventListener('visibilitychange', handleRevalidate)
+
+    return () => {
+      mounted = false
+      window.removeEventListener('focus', handleRevalidate)
+      document.removeEventListener('visibilitychange', handleRevalidate)
+    }
+  }, [])
 
   const solutions = [
     {
@@ -81,100 +118,6 @@ export default function Insights() {
       slug: 'fire-pump-solutions'
     }
   ]
-
-  const featuredPost = {
-    tag: { en: 'SUPPLY CHAIN', ar: 'سلسلة الإمداد' },
-    title: { en: 'Building Resilient Industrial Supply Chains', ar: 'بناء سلاسل إمداد صناعية مرنة' },
-    desc: {
-      en: 'Strategies for securing raw materials and custom parts in a volatile global market.',
-      ar: 'استراتيجيات لتأمين المواد الخام والقطع المخصصة في ظل تقلبات السوق العالمية.'
-    },
-    date: { en: 'June 25, 2026', ar: '٢٥ يونيو ٢٠٢٦' },
-    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80'
-  }
-
-  const staticPosts: BlogPost[] = [
-    {
-      id: 1,
-      tag: { en: 'DIGITALIZATION', ar: 'التحول الرقمي' },
-      title: { en: 'Smart Technologies for the Transformation of Industry', ar: 'التقنيات الذكية لتحول القطاع الصناعي' },
-      desc: {
-        en: 'How IoT and advanced data analytics are optimizing production lines and minimizing downtime.',
-        ar: 'كيف يساهم إنترنت الأشياء وتحليلات البيانات المتقدمة في تحسين خطوط الإنتاج وتقليل وقت التوقف.'
-      },
-      date: { en: 'June 20, 2026', ar: '٢٠ يونيو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 2,
-      tag: { en: 'ROBOTICS', ar: 'الروبوتات' },
-      title: { en: 'Collaborative Robots: Shaping the Future of Manufacturing', ar: 'الروبوتات المتعاونة: صياغة مستقبل التصنيع' },
-      desc: {
-        en: 'The role of cobots in safe human-robot collaboration on the factory floor.',
-        ar: 'دور الروبوتات المتعاونة في تعزيز العمل المشترك الآمن بين البشر والآلات في المصانع.'
-      },
-      date: { en: 'June 15, 2026', ar: '١٥ يونيو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 3,
-      tag: { en: 'AUTOMATION', ar: 'الأتمتة' },
-      title: { en: 'Advancing Control Systems through Connected Devices', ar: 'تطوير أنظمة التحكم من خلال الأجهزة المتصلة' },
-      desc: {
-        en: 'Integrating smart field devices to achieve real-time process monitoring and precision control.',
-        ar: 'دمج الأجهزة الحقلية الذكية لتحقيق المراقبة الفورية والتحكم الدقيق في العمليات.'
-      },
-      date: { en: 'June 10, 2026', ar: '١٠ يونيو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 4,
-      tag: { en: 'MATERIALS', ar: 'المواد المتقدمة' },
-      title: { en: 'The Rise of Advanced Composites in Heavy Industry', ar: 'صعود المواد المركبة المتقدمة في الصناعات الثقيلة' },
-      desc: {
-        en: 'Why composite structures are replacing traditional metals for high-stress applications.',
-        ar: 'لماذا تستبدل الهياكل المركبة المعادن التقليدية في التطبيقات ذات الإجهاد العالي.'
-      },
-      date: { en: 'May 28, 2026', ar: '٢٨ مايو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 5,
-      tag: { en: 'ENERGY', ar: 'كفاءة الطاقة' },
-      title: { en: 'Optimizing Cooling Systems for Energy Efficiency', ar: 'تحسين أنظمة التبريد لكفاءة استهلاك الطاقة' },
-      desc: {
-        en: 'Innovative chiller configurations that lower power consumption in large facilities.',
-        ar: 'تكوينات المبردات المبتكرة التي تقلل من استهلاك الطاقة في المنشآت الكبيرة.'
-      },
-      date: { en: 'May 15, 2026', ar: '١٥ مايو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80'
-    },
-    {
-      id: 6,
-      tag: { en: 'LOGISTICS', ar: 'الخدمات اللوجستية' },
-      title: { en: 'Navigating Global Trade and Port Performance', ar: 'توجيه التجارة العالمية وأداء الموانئ' },
-      desc: {
-        en: 'Understanding recent supply chain patterns to optimize shipping and port turnarounds.',
-        ar: 'فهم أنماط سلاسل الإمداد الأخيرة لتحسين عمليات الشحن وأوقات دوران الموانئ.'
-      },
-      date: { en: 'May 02, 2026', ar: '٠٢ مايو ٢٠٢٦' },
-      image: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=600&q=80'
-    }
-  ]
-
-  const [posts, setPosts] = useState<BlogPost[]>(staticPosts)
-
-  useEffect(() => {
-    let mounted = true
-    getBlogs().then((cmsPosts) => {
-      if (mounted && cmsPosts && cmsPosts.length > 0) {
-        setPosts(cmsPosts)
-      }
-    })
-    return () => {
-      mounted = false
-    }
-  }, [])
 
   return (
     <div className="font-sans min-h-screen bg-slate-50 text-slate-800">
@@ -235,29 +178,41 @@ export default function Insights() {
         </div>
 
         {/* Featured Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-          <div className="lg:col-span-7 h-72 sm:h-96 lg:h-full relative overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 group">
+          <Link
+            to={localizedPath(`/insights/${featuredPost.slug || featuredPost.id}`)}
+            className="lg:col-span-7 h-72 sm:h-96 lg:h-full relative overflow-hidden block"
+          >
             <img
               src={featuredPost.image}
               alt={featuredPost.title[locale]}
-              className="w-full h-full object-cover transform hover:scale-102 transition-transform duration-700"
+              className="w-full h-full object-cover transform group-hover:scale-102 transition-transform duration-700"
             />
-          </div>
+          </Link>
           <div className="lg:col-span-5 p-8 sm:p-10 flex flex-col justify-center space-y-6 bg-white">
             <span className="inline-flex px-3 py-1 bg-brand-light text-brand-primary text-[10px] font-extrabold rounded-md uppercase tracking-wider self-start">
               {featuredPost.tag[locale]}
             </span>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-950 leading-snug">
-              {featuredPost.title[locale]}
-            </h3>
+            <Link
+              to={localizedPath(`/insights/${featuredPost.slug || featuredPost.id}`)}
+              className="block group-hover:text-brand-primary transition-colors"
+            >
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-950 leading-snug">
+                {featuredPost.title[locale]}
+              </h3>
+            </Link>
             <p className="text-slate-500 text-sm leading-relaxed">
               {featuredPost.desc[locale]}
             </p>
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
               <span className="text-slate-400 text-xs font-semibold">{featuredPost.date[locale]}</span>
-              <button className="px-5 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors duration-200">
-                {locale === 'ar' ? 'اقرأ المزيد' : 'Read More'}
-              </button>
+              <Link
+                to={localizedPath(`/insights/${featuredPost.slug || featuredPost.id}`)}
+                className="px-5 py-2.5 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-colors duration-200 inline-flex items-center gap-1.5"
+              >
+                <span>{locale === 'ar' ? 'اقرأ المزيد' : 'Read More'}</span>
+                <span>{dir === 'rtl' ? '←' : '→'}</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -287,30 +242,42 @@ export default function Insights() {
                 key={post.id}
                 className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group hover:-translate-y-1"
               >
-                <div className="h-48 overflow-hidden relative">
+                <Link
+                  to={localizedPath(`/insights/${post.slug || post.id}`)}
+                  className="h-48 overflow-hidden relative block"
+                >
                   <img
                     src={post.image}
                     alt={post.title[locale]}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
-                </div>
+                </Link>
                 <div className="p-6 flex-grow flex flex-col justify-between space-y-6">
                   <div className="space-y-3">
                     <span className="inline-flex px-2.5 py-0.5 bg-brand-light text-brand-primary text-[9px] font-extrabold rounded uppercase tracking-wider">
                       {post.tag[locale]}
                     </span>
-                    <h3 className="text-base sm:text-lg font-bold text-slate-950 leading-snug">
-                      {post.title[locale]}
-                    </h3>
+                    <Link
+                      to={localizedPath(`/insights/${post.slug || post.id}`)}
+                      className="block group-hover:text-brand-primary transition-colors"
+                    >
+                      <h3 className="text-base sm:text-lg font-bold text-slate-950 leading-snug">
+                        {post.title[locale]}
+                      </h3>
+                    </Link>
                     <p className="text-slate-500 text-xs sm:text-sm leading-relaxed line-clamp-3">
                       {post.desc[locale]}
                     </p>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                     <span className="text-slate-400 text-2xs font-semibold">{post.date[locale]}</span>
-                    <button className="px-4 py-2 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors duration-200">
-                      {locale === 'ar' ? 'اقرأ المزيد' : 'Read More'}
-                    </button>
+                    <Link
+                      to={localizedPath(`/insights/${post.slug || post.id}`)}
+                      className="px-4 py-2 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-lg text-[10px] uppercase tracking-wider transition-colors duration-200 inline-flex items-center gap-1.5"
+                    >
+                      <span>{locale === 'ar' ? 'اقرأ المزيد' : 'Read More'}</span>
+                      <span>{dir === 'rtl' ? '←' : '→'}</span>
+                    </Link>
                   </div>
                 </div>
               </div>

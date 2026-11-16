@@ -1,17 +1,11 @@
 import { eventsData, type EventItem } from '../data/events'
 import { jobsData, type JobOpening } from '../data/jobs'
 import { solutionsData, type Solution } from '../data/solutions'
+import { insightsData, type InsightItem } from '../data/insights'
 
-export interface BlogPostItem {
-  id: number | string
-  slug?: string
-  tag: { en: string; ar: string }
-  title: { en: string; ar: string }
-  desc: { en: string; ar: string }
-  date: { en: string; ar: string }
-  image: string
-  content?: { en: string; ar: string }
-}
+export type BlogPostItem = InsightItem
+export type { InsightItem }
+export type { EventItem }
 
 export const WP_GRAPHQL_URL =
   import.meta.env.VITE_WP_GRAPHQL_URL || 'https://saudicms.multivistaprintsolutions.com/graphql'
@@ -49,8 +43,31 @@ export async function fetchGraphQL<T = any>(query: string, variables = {}): Prom
   }
 }
 
+// In-Memory and LocalStorage Cache for 0ms Instant Rendering of Events
+const CACHE_KEY_EVENTS = 'mvgl_cache_events'
+let inMemoryEvents: EventItem[] | null = null
+
 /**
- * 1. Fetch Events from Headless WordPress (with static fallback)
+ * Synchronous instant cache getter for Events (0ms latency, zero delay)
+ */
+export function getCachedEvents(): EventItem[] {
+  if (!inMemoryEvents) {
+    try {
+      const stored = localStorage.getItem(CACHE_KEY_EVENTS)
+      if (stored) {
+        inMemoryEvents = JSON.parse(stored)
+      }
+    } catch {}
+  }
+
+  if (inMemoryEvents && inMemoryEvents.length > 0) {
+    return inMemoryEvents
+  }
+  return eventsData
+}
+
+/**
+ * 1. Fetch Events from Headless WordPress (with instant cache & smart merge)
  */
 export async function getEvents(): Promise<EventItem[]> {
   const query = `
@@ -69,10 +86,18 @@ export async function getEvents(): Promise<EventItem[]> {
             titleAr
             dateEn
             dateAr
+            timeEn
+            timeAr
             locationEn
             locationAr
+            eventTypeEn
+            eventTypeAr
+            status
             descriptionEn
             descriptionAr
+            contentEn
+            contentAr
+            registrationUrl
           }
         }
       }
@@ -80,36 +105,140 @@ export async function getEvents(): Promise<EventItem[]> {
   `
 
   const data = await fetchGraphQL<{ events: { nodes: any[] } }>(query)
-  if (data?.events?.nodes && data.events.nodes.length > 0) {
-    return data.events.nodes.map((node) => {
+  if (data?.events?.nodes && Array.isArray(data.events.nodes)) {
+    const cmsMap = new Map<string, EventItem>()
+
+    data.events.nodes.forEach((node) => {
       const f = node.eventFields || {}
-      return {
-        id: node.slug || node.id,
+      const titleEn = f.titleEn || node.slug || 'Event'
+      const titleAr = f.titleAr || titleEn
+      const slug = node.slug || node.id
+
+      const evItem: EventItem = {
+        id: slug || node.id,
+        slug: slug,
         title: {
-          en: f.titleEn || node.slug || 'Event',
-          ar: f.titleAr || f.titleEn || 'فعالية',
+          en: titleEn,
+          ar: titleAr,
         },
         date: {
           en: f.dateEn || '',
           ar: f.dateAr || f.dateEn || '',
         },
+        time: {
+          en: f.timeEn || '',
+          ar: f.timeAr || f.timeEn || '',
+        },
         location: {
           en: f.locationEn || '',
           ar: f.locationAr || f.locationEn || '',
         },
+        eventType: {
+          en: f.eventTypeEn || 'Technical Exhibition & Conference',
+          ar: f.eventTypeAr || f.eventTypeEn || 'مؤتمر ومعرض تقني',
+        },
+        status: f.status || 'upcoming',
         description: {
           en: f.descriptionEn || '',
           ar: f.descriptionAr || f.descriptionEn || '',
         },
+        content: {
+          en: f.contentEn || f.descriptionEn || '',
+          ar: f.contentAr || f.descriptionAr || f.contentEn || '',
+        },
         image:
           node.featuredImage?.node?.sourceUrl ||
-          'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+        registrationUrl: f.registrationUrl || undefined,
       }
+
+      if (slug) cmsMap.set(slug.toLowerCase(), evItem)
+      if (titleEn) cmsMap.set(titleEn.toLowerCase(), evItem)
     })
+
+    // Merge logic:
+    // 1. Process static fallback events: override if CMS customized them
+    const mergedList: EventItem[] = []
+    const usedSlugs = new Set<string>()
+
+    for (const staticEv of eventsData) {
+      const match =
+        cmsMap.get(staticEv.slug.toLowerCase()) ||
+        cmsMap.get(staticEv.id.toLowerCase()) ||
+        cmsMap.get(staticEv.title.en.toLowerCase())
+
+      if (match) {
+        usedSlugs.add(match.slug.toLowerCase())
+        usedSlugs.add(match.id.toLowerCase())
+        mergedList.push(match)
+      } else {
+        mergedList.push(staticEv)
+      }
+    }
+
+    // 2. Prepend brand-new events published from CMS
+    data.events.nodes.forEach((node) => {
+      const f = node.eventFields || {}
+      const titleEn = f.titleEn || node.slug || ''
+      const slug = node.slug || node.id
+
+      if (usedSlugs.has(slug.toLowerCase()) || (titleEn && usedSlugs.has(titleEn.toLowerCase()))) {
+        return // already merged
+      }
+
+      usedSlugs.add(slug.toLowerCase())
+
+      const newEv: EventItem = {
+        id: slug || node.id,
+        slug: slug,
+        title: {
+          en: titleEn || 'Event',
+          ar: f.titleAr || titleEn || 'فعالية',
+        },
+        date: {
+          en: f.dateEn || '',
+          ar: f.dateAr || f.dateEn || '',
+        },
+        time: {
+          en: f.timeEn || '',
+          ar: f.timeAr || f.timeEn || '',
+        },
+        location: {
+          en: f.locationEn || '',
+          ar: f.locationAr || f.locationEn || '',
+        },
+        eventType: {
+          en: f.eventTypeEn || 'Technical Exhibition & Conference',
+          ar: f.eventTypeAr || f.eventTypeEn || 'مؤتمر ومعرض تقني',
+        },
+        status: f.status || 'upcoming',
+        description: {
+          en: f.descriptionEn || '',
+          ar: f.descriptionAr || f.descriptionEn || '',
+        },
+        content: {
+          en: f.contentEn || f.descriptionEn || '',
+          ar: f.contentAr || f.descriptionAr || f.contentEn || '',
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80',
+        registrationUrl: f.registrationUrl || undefined,
+      }
+
+      mergedList.unshift(newEv)
+    })
+
+    if (mergedList.length > 0) {
+      inMemoryEvents = mergedList
+      try {
+        localStorage.setItem(CACHE_KEY_EVENTS, JSON.stringify(mergedList))
+      } catch {}
+      return mergedList
+    }
   }
 
-  // Fallback to static data
-  return eventsData
+  return getCachedEvents()
 }
 
 /**
@@ -362,6 +491,7 @@ export async function getProducts(): Promise<Solution[]> {
             descriptionAr
             specsEn
             specsAr
+            exploreUrl
             brochurePdf {
               node {
                 mediaItemUrl
@@ -486,6 +616,7 @@ export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerP
             specsAr
             descriptionEn
             descriptionAr
+            exploreUrl
             brochurePdf {
               node {
                 mediaItemUrl
@@ -562,18 +693,46 @@ export function preloadCmsData() {
   getBlogs()
 }
 
+// In-Memory and LocalStorage Cache for 0ms Instant Rendering of Insights
+const CACHE_KEY_INSIGHTS = 'mvgl_cache_insights'
+let inMemoryInsights: InsightItem[] | null = null
+
 /**
- * 4. Fetch Blogs (Posts) from Headless WordPress
+ * Synchronous instant cache getter for Insights (0ms latency, zero delay)
  */
-export async function getBlogs(): Promise<BlogPostItem[]> {
+export function getCachedInsights(): InsightItem[] {
+  if (!inMemoryInsights) {
+    try {
+      const stored = localStorage.getItem(CACHE_KEY_INSIGHTS)
+      if (stored) {
+        inMemoryInsights = JSON.parse(stored)
+      }
+    } catch {}
+  }
+
+  if (inMemoryInsights && inMemoryInsights.length > 0) {
+    return inMemoryInsights
+  }
+  return insightsData
+}
+
+/**
+ * 4. Fetch Blogs / Insights (Posts) from Headless WordPress with instant cache & smart merge
+ */
+export async function getBlogs(): Promise<InsightItem[]> {
+  return getInsights()
+}
+
+export async function getInsights(): Promise<InsightItem[]> {
   const query = `
     query GetPosts {
-      posts(first: 50) {
+      posts(first: 100) {
         nodes {
           id
           slug
           date
           title
+          content
           featuredImage {
             node {
               sourceUrl
@@ -586,54 +745,179 @@ export async function getBlogs(): Promise<BlogPostItem[]> {
             excerptEn
             excerptAr
             contentAr
+            readTimeEn
+            readTimeAr
+            authorName
           }
-          content
         }
       }
     }
   `
 
   const data = await fetchGraphQL<{ posts: { nodes: any[] } }>(query)
-  if (data?.posts?.nodes && data.posts.nodes.length > 0) {
-    return data.posts.nodes.map((node, idx) => {
+  if (data?.posts?.nodes && Array.isArray(data.posts.nodes)) {
+    const cmsMap = new Map<string, InsightItem>()
+
+    // Exclude default placeholder post if unconfigured
+    const validNodes = data.posts.nodes.filter(
+      (n) => n.slug !== 'hello-world' || (n.blogFields?.tagEn && n.title !== 'Hello world!')
+    )
+
+    validNodes.forEach((node) => {
       const f = node.blogFields || {}
-      return {
-        id: node.id || idx + 1,
-        slug: node.slug,
+      const titleEn = node.title || f.titleEn || 'Insight'
+      const titleAr = f.titleAr || titleEn
+      const slug = node.slug || node.id
+      const dateFormattedEn = node.date
+        ? new Date(node.date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'Recent'
+      const dateFormattedAr = node.date
+        ? new Date(node.date).toLocaleDateString('ar-SA', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'حديثاً'
+
+      const item: InsightItem = {
+        id: slug || node.id,
+        slug: slug,
         tag: {
           en: f.tagEn || 'INSIGHTS',
-          ar: f.tagAr || 'رؤى صناعية',
+          ar: f.tagAr || f.tagEn || 'رؤى صناعية',
         },
         title: {
-          en: node.title || 'Insight',
-          ar: f.titleAr || node.title || 'رؤية صناعية',
+          en: titleEn,
+          ar: titleAr,
         },
         desc: {
           en: f.excerptEn || '',
           ar: f.excerptAr || f.excerptEn || '',
         },
+        content: {
+          en: node.content || f.excerptEn || '',
+          ar: f.contentAr || f.excerptAr || node.content || '',
+        },
         date: {
-          en: new Date(node.date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          }),
-          ar: new Date(node.date).toLocaleDateString('ar-SA', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          }),
+          en: dateFormattedEn,
+          ar: dateFormattedAr,
         },
         image:
           node.featuredImage?.node?.sourceUrl ||
-          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80',
-        content: {
-          en: node.content || '',
-          ar: f.contentAr || node.content || '',
+          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80',
+        readTime: {
+          en: f.readTimeEn || '5 min read',
+          ar: f.readTimeAr || '٥ دقائق قراءة',
+        },
+        author: {
+          en: f.authorName || 'MVGL Engineering Team',
+          ar: 'فريق الهندسة - إم في جي إل',
         },
       }
+
+      if (slug) cmsMap.set(slug.toLowerCase(), item)
+      if (titleEn) cmsMap.set(titleEn.toLowerCase(), item)
     })
+
+    // Merge logic:
+    // 1. Process static fallback insights
+    const mergedList: InsightItem[] = []
+    const usedSlugs = new Set<string>()
+
+    for (const staticItem of insightsData) {
+      const match =
+        cmsMap.get(staticItem.slug.toLowerCase()) ||
+        cmsMap.get(staticItem.id.toString().toLowerCase()) ||
+        cmsMap.get(staticItem.title.en.toLowerCase())
+
+      if (match) {
+        usedSlugs.add(match.slug.toLowerCase())
+        usedSlugs.add(match.id.toString().toLowerCase())
+        mergedList.push(match)
+      } else {
+        mergedList.push(staticItem)
+      }
+    }
+
+    // 2. Prepend brand-new posts published from CMS
+    validNodes.forEach((node) => {
+      const slug = node.slug || node.id
+      const titleEn = node.title || ''
+
+      if (usedSlugs.has(slug.toLowerCase()) || (titleEn && usedSlugs.has(titleEn.toLowerCase()))) {
+        return // already merged
+      }
+
+      usedSlugs.add(slug.toLowerCase())
+
+      const f = node.blogFields || {}
+      const titleAr = f.titleAr || titleEn
+      const dateFormattedEn = node.date
+        ? new Date(node.date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'Recent'
+      const dateFormattedAr = node.date
+        ? new Date(node.date).toLocaleDateString('ar-SA', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })
+        : 'حديثاً'
+
+      const newItem: InsightItem = {
+        id: slug || node.id,
+        slug: slug,
+        tag: {
+          en: f.tagEn || 'INSIGHTS',
+          ar: f.tagAr || f.tagEn || 'رؤى صناعية',
+        },
+        title: {
+          en: titleEn || 'Insight',
+          ar: titleAr || titleEn || 'رؤية صناعية',
+        },
+        desc: {
+          en: f.excerptEn || '',
+          ar: f.excerptAr || f.excerptEn || '',
+        },
+        content: {
+          en: node.content || f.excerptEn || '',
+          ar: f.contentAr || f.excerptAr || node.content || '',
+        },
+        date: {
+          en: dateFormattedEn,
+          ar: dateFormattedAr,
+        },
+        image:
+          node.featuredImage?.node?.sourceUrl ||
+          'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80',
+        readTime: {
+          en: f.readTimeEn || '5 min read',
+          ar: f.readTimeAr || '٥ دقائق قراءة',
+        },
+        author: {
+          en: f.authorName || 'MVGL Engineering Team',
+          ar: 'فريق الهندسة - إم في جي إل',
+        },
+      }
+
+      mergedList.unshift(newItem)
+    })
+
+    if (mergedList.length > 0) {
+      inMemoryInsights = mergedList
+      try {
+        localStorage.setItem(CACHE_KEY_INSIGHTS, JSON.stringify(mergedList))
+      } catch {}
+      return mergedList
+    }
   }
 
-  return []
+  return getCachedInsights()
 }

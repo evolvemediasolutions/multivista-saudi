@@ -23,6 +23,8 @@ import RefrigerationHvacSolutions from './pages/RefrigerationHvacSolutions'
 import NonMetallicSolutions from './pages/NonMetallicSolutions'
 import FirePumpSolutions from './pages/FirePumpSolutions'
 import JobDetail from './pages/JobDetail'
+import InsightDetail from './pages/InsightDetail'
+import EventDetail from './pages/EventDetail'
 import { useEffect } from 'react'
 import { preloadCmsData } from './services/graphql'
 
@@ -256,6 +258,14 @@ function App() {
             }
           />
           <Route
+            path="/:lang/events/:eventSlug"
+            element={
+              <LocaleWrapper>
+                <EventDetail />
+              </LocaleWrapper>
+            }
+          />
+          <Route
             path="/:lang/contact"
             element={
               <LocaleWrapper>
@@ -316,6 +326,14 @@ function App() {
             element={
               <LocaleWrapper>
                 <Insights />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/insights/:slug"
+            element={
+              <LocaleWrapper>
+                <InsightDetail />
               </LocaleWrapper>
             }
           />
