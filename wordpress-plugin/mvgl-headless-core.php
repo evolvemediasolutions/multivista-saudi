@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.3.0
+ * Version: 2.4.0
  * Author: MVGL / Antigravity
  */
 
@@ -36,40 +36,76 @@ add_action('init', function() {
 /**
  * 2. Automatic Google Translate to Arabic Helper
  */
+if (!function_exists('mvgl_is_arabic_text')) {
+    function mvgl_is_arabic_text($text = '') {
+        return !empty($text) && preg_match('/[\x{0600}-\x{06FF}]/u', (string)$text);
+    }
+}
+
 if (!function_exists('mvgl_auto_translate_to_arabic')) {
     function mvgl_auto_translate_to_arabic($text = '') {
-        if (empty(trim((string)$text))) {
+        $raw = trim((string)$text);
+        if (empty($raw)) {
             return '';
         }
-        
-        $encoded = urlencode(trim((string)$text));
-        $url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
-        
-        $response = wp_remote_get($url, [
-            'timeout' => 15,
+
+        // Clean plain text
+        $plain = trim(wp_strip_all_tags($raw));
+        if (empty($plain)) {
+            return '';
+        }
+
+        $encoded = urlencode($plain);
+
+        // Provider 1: Google Translate API
+        $url1 = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=" . $encoded;
+        $response1 = wp_remote_get($url1, [
+            'timeout' => 12,
             'headers' => [
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
             ]
         ]);
-        
-        if (is_wp_error($response)) {
-            return $text;
-        }
-        
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        
-        if (isset($data[0]) && is_array($data[0])) {
-            $translated = '';
-            foreach ($data[0] as $segment) {
-                if (isset($segment[0])) {
-                    $translated .= $segment[0];
+
+        if (!is_wp_error($response1)) {
+            $body1 = wp_remote_retrieve_body($response1);
+            $data1 = json_decode($body1, true);
+
+            if (isset($data1[0]) && is_array($data1[0])) {
+                $translated = '';
+                foreach ($data1[0] as $segment) {
+                    if (isset($segment[0])) {
+                        $translated .= $segment[0];
+                    }
+                }
+                $trimmedTrans = trim($translated);
+                if (!empty($trimmedTrans) && preg_match('/[\x{0600}-\x{06FF}]/u', $trimmedTrans)) {
+                    return $trimmedTrans;
                 }
             }
-            return trim($translated);
         }
-        
-        return $text;
+
+        // Provider 2: MyMemory API Fallback (Free, Highly Reliable)
+        $url2 = "https://api.mymemory.translated.net/get?q=" . $encoded . "&langpair=en|ar";
+        $response2 = wp_remote_get($url2, [
+            'timeout' => 12,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+            ]
+        ]);
+
+        if (!is_wp_error($response2)) {
+            $body2 = wp_remote_retrieve_body($response2);
+            $data2 = json_decode($body2, true);
+            if (!empty($data2['responseData']['translatedText'])) {
+                $transText = html_entity_decode($data2['responseData']['translatedText'], ENT_QUOTES, 'UTF-8');
+                $trimmedTrans2 = trim($transText);
+                if (!empty($trimmedTrans2) && preg_match('/[\x{0600}-\x{06FF}]/u', $trimmedTrans2)) {
+                    return $trimmedTrans2;
+                }
+            }
+        }
+
+        return '';
     }
 }
 
@@ -707,25 +743,29 @@ add_action('acf/save_post', function($post_id = 0) {
     }
 
     
+    // Helper closure to translate if Arabic is empty, lacks Arabic letters, or accidentally equals English
+    $ensure_ar = function($en_val, $ar_field_name) use ($post_id) {
+        $en_trimmed = trim((string)$en_val);
+        if (empty($en_trimmed)) return;
+        $ar_val = get_field($ar_field_name, $post_id);
+        if (empty($ar_val) || !mvgl_is_arabic_text($ar_val) || trim((string)$ar_val) === $en_trimmed) {
+            $trans = mvgl_auto_translate_to_arabic($en_trimmed);
+            if (mvgl_is_arabic_text($trans)) {
+                update_field($ar_field_name, $trans, $post_id);
+            }
+        }
+    };
+
     // 5.1 Translate Product Fields
     if ($post_type === 'product') {
         $title_en = get_field('title_en', $post_id);
-        $title_ar = get_field('title_ar', $post_id);
-        if (!empty($title_en) && empty($title_ar)) {
-            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
+        if (empty($title_en)) {
+            $title_en = get_the_title($post_id);
         }
-        
-        $specs_en = get_field('specs_en', $post_id);
-        $specs_ar = get_field('specs_ar', $post_id);
-        if (!empty($specs_en) && empty($specs_ar)) {
-            update_field('specs_ar', mvgl_auto_translate_to_arabic($specs_en), $post_id);
-        }
-        
-        $desc_en = get_field('description_en', $post_id);
-        $desc_ar = get_field('description_ar', $post_id);
-        if (!empty($desc_en) && empty($desc_ar)) {
-            update_field('description_ar', mvgl_auto_translate_to_arabic($desc_en), $post_id);
-        }
+        $ensure_ar($title_en, 'title_ar');
+        $ensure_ar(get_field('category_en', $post_id), 'category_ar');
+        $ensure_ar(get_field('specs_en', $post_id), 'specs_ar');
+        $ensure_ar(get_field('description_en', $post_id), 'description_ar');
     }
     
     // 5.2 Translate Event Fields
@@ -736,18 +776,11 @@ add_action('acf/save_post', function($post_id = 0) {
             update_field('title_en', $post_title, $post_id);
             $title_en = $post_title;
         }
-        $title_ar = get_field('title_ar', $post_id);
-        if (!empty($title_en) && empty($title_ar)) {
-            update_field('title_ar', mvgl_auto_translate_to_arabic($title_en), $post_id);
-        }
+        $ensure_ar($title_en, 'title_ar');
 
         $simple_event_fields = ['date', 'time', 'location', 'event_type', 'description', 'content'];
         foreach ($simple_event_fields as $f) {
-            $en = get_field($f . '_en', $post_id);
-            $ar = get_field($f . '_ar', $post_id);
-            if (!empty($en) && empty($ar)) {
-                update_field($f . '_ar', mvgl_auto_translate_to_arabic($en), $post_id);
-            }
+            $ensure_ar(get_field($f . '_en', $post_id), $f . '_ar');
         }
     }
     
@@ -755,47 +788,28 @@ add_action('acf/save_post', function($post_id = 0) {
     if ($post_type === 'career') {
         $simple_fields = ['title', 'department', 'designation', 'location', 'experience', 'employment_type', 'about_role', 'responsibilities', 'requirements'];
         foreach ($simple_fields as $f) {
-            $en = get_field($f . '_en', $post_id);
-            $ar = get_field($f . '_ar', $post_id);
-            if (!empty($en) && empty($ar)) {
-                update_field($f . '_ar', mvgl_auto_translate_to_arabic($en), $post_id);
-            }
+            $ensure_ar(get_field($f . '_en', $post_id), $f . '_ar');
         }
     }
     
     // 5.4 Translate Blog Fields
     if ($post_type === 'post') {
         $post_title = get_the_title($post_id);
-        $title_ar = get_field('title_ar', $post_id);
-        if (empty($title_ar) && !empty($post_title)) {
-            update_field('title_ar', mvgl_auto_translate_to_arabic($post_title), $post_id);
-        }
-
-        $tag_en = get_field('tag_en', $post_id);
-        $tag_ar = get_field('tag_ar', $post_id);
-        if (!empty($tag_en) && empty($tag_ar)) {
-            update_field('tag_ar', mvgl_auto_translate_to_arabic($tag_en), $post_id);
-        }
-        
-        $excerpt_en = get_field('excerpt_en', $post_id);
-        $excerpt_ar = get_field('excerpt_ar', $post_id);
-        if (!empty($excerpt_en) && empty($excerpt_ar)) {
-            update_field('excerpt_ar', mvgl_auto_translate_to_arabic($excerpt_en), $post_id);
-        }
-
-        $read_en = get_field('read_time_en', $post_id);
-        $read_ar = get_field('read_time_ar', $post_id);
-        if (!empty($read_en) && empty($read_ar)) {
-            update_field('read_time_ar', mvgl_auto_translate_to_arabic($read_en), $post_id);
-        }
+        $ensure_ar($post_title, 'title_ar');
+        $ensure_ar(get_field('tag_en', $post_id), 'tag_ar');
+        $ensure_ar(get_field('excerpt_en', $post_id), 'excerpt_ar');
+        $ensure_ar(get_field('read_time_en', $post_id), 'read_time_ar');
 
         $content_ar = get_field('content_ar', $post_id);
-        if (empty($content_ar)) {
+        if (empty($content_ar) || !mvgl_is_arabic_text($content_ar)) {
             $post_obj = get_post($post_id);
             if (!empty($post_obj->post_content)) {
                 $clean_text = wp_strip_all_tags($post_obj->post_content);
-                if (strlen($clean_text) < 2500) {
-                    update_field('content_ar', mvgl_auto_translate_to_arabic($clean_text), $post_id);
+                if (strlen($clean_text) < 3000) {
+                    $trans = mvgl_auto_translate_to_arabic($clean_text);
+                    if (mvgl_is_arabic_text($trans)) {
+                        update_field('content_ar', $trans, $post_id);
+                    }
                 }
             }
         }
@@ -803,9 +817,37 @@ add_action('acf/save_post', function($post_id = 0) {
 }, 20);
 
 /**
- * 5.5 Backend AJAX Translation Fallback Handler
+ * 5.5 Backend REST API & AJAX Translation Handlers
  */
+add_action('rest_api_init', function() {
+    register_rest_route('mvgl/v1', '/translate', [
+        'methods' => ['GET', 'POST'],
+        'permission_callback' => '__return_true',
+        'callback' => function($request) {
+            $text = $request->get_param('text') ?? '';
+            if (empty(trim($text))) {
+                return new WP_REST_Response(['success' => false, 'error' => 'Empty text'], 400);
+            }
+            $translated = mvgl_auto_translate_to_arabic($text);
+            return new WP_REST_Response([
+                'success' => true,
+                'original' => $text,
+                'translated' => $translated
+            ], 200);
+        }
+    ]);
+});
+
 add_action('wp_ajax_mvgl_ajax_translate', function() {
+    $text = sanitize_text_field($_POST['text'] ?? '');
+    if (empty($text)) {
+        wp_send_json_error('Empty text');
+    }
+    $translated = mvgl_auto_translate_to_arabic($text);
+    wp_send_json_success($translated);
+});
+
+add_action('wp_ajax_nopriv_mvgl_ajax_translate', function() {
     $text = sanitize_text_field($_POST['text'] ?? '');
     if (empty($text)) {
         wp_send_json_error('Empty text');
@@ -826,42 +868,62 @@ add_action('admin_footer', function() {
     (function() {
         var isTranslating = false;
 
+        function hasArabic(str) {
+            return str && /[\u0600-\u06FF]/.test(str);
+        }
+
         async function callTranslateApi(text) {
             if (!text || !text.trim()) return '';
             var trimmed = text.trim();
 
-            // 1. Try Client-side Google Translate
+            // Provider 1: Client-side MyMemory API (Fast, Free, CORS *, Never blocked by browser privacy/adblock)
             try {
-                var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(trimmed);
-                var res = await fetch(url);
-                if (res.ok) {
-                    var data = await res.json();
-                    if (data && data[0]) {
-                        var resText = data[0].map(function(s) { return s[0]; }).join('');
-                        if (resText && resText.trim()) return resText.trim();
+                var url1 = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(trimmed) + '&langpair=en|ar';
+                var r1 = await fetch(url1);
+                if (r1.ok) {
+                    var d1 = await r1.json();
+                    if (d1 && d1.responseData && d1.responseData.translatedText) {
+                        var res1 = d1.responseData.translatedText.trim();
+                        var txt = document.createElement('textarea');
+                        txt.innerHTML = res1;
+                        var decoded = txt.value.trim();
+                        if (hasArabic(decoded)) return decoded;
                     }
                 }
-            } catch(e) {
-                console.warn('[MVGL Translator] Client-side fetch failed, trying AJAX fallback...', e);
+            } catch(e1) {
+                console.warn('[MVGL Translator] MyMemory provider error:', e1);
             }
 
-            // 2. Fallback to WordPress backend AJAX endpoint
+            // Provider 2: Client-side Google Translate API
             try {
-                if (typeof ajaxurl !== 'undefined') {
-                    var formData = new FormData();
-                    formData.append('action', 'mvgl_ajax_translate');
-                    formData.append('text', trimmed);
-                    var res2 = await fetch(ajaxurl, { method: 'POST', body: formData });
-                    var json2 = await res2.json();
-                    if (json2 && json2.success && json2.data) {
-                        return json2.data;
+                var url2 = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q=' + encodeURIComponent(trimmed);
+                var r2 = await fetch(url2);
+                if (r2.ok) {
+                    var d2 = await r2.json();
+                    if (d2 && d2[0]) {
+                        var res2 = d2[0].map(function(s) { return s[0]; }).join('').trim();
+                        if (hasArabic(res2)) return res2;
                     }
                 }
             } catch(e2) {
-                console.error('[MVGL Translator] AJAX fallback failed:', e2);
+                console.warn('[MVGL Translator] Google Translate provider error:', e2);
             }
 
-            return trimmed;
+            // Provider 3: WordPress REST API Backend Endpoint (/wp-json/mvgl/v1/translate)
+            try {
+                var restUrl = '/wp-json/mvgl/v1/translate?text=' + encodeURIComponent(trimmed);
+                var r3 = await fetch(restUrl);
+                if (r3.ok) {
+                    var d3 = await r3.json();
+                    if (d3 && d3.translated && hasArabic(d3.translated)) {
+                        return d3.translated.trim();
+                    }
+                }
+            } catch(e3) {
+                console.error('[MVGL Translator] REST backend translation error:', e3);
+            }
+
+            return '';
         }
 
         function getFieldValue(name) {
@@ -900,6 +962,9 @@ add_action('admin_footer', function() {
                     input.value = value;
                     input.dispatchEvent(new Event('input', { bubbles: true }));
                     input.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (window.jQuery) {
+                        try { window.jQuery(input).val(value).trigger('input').trigger('change'); } catch(e) {}
+                    }
                     highlightField(field);
                     return;
                 }
@@ -910,6 +975,9 @@ add_action('admin_footer', function() {
                 direct.value = value;
                 direct.dispatchEvent(new Event('input', { bubbles: true }));
                 direct.dispatchEvent(new Event('change', { bubbles: true }));
+                if (window.jQuery) {
+                    try { window.jQuery(direct).val(value).trigger('input').trigger('change'); } catch(e) {}
+                }
                 highlightField(direct);
             }
         }
@@ -934,29 +1002,48 @@ add_action('admin_footer', function() {
             buttonEl.innerHTML = '⏳ Translating to Arabic...';
 
             try {
-                // If title_en is empty, check standard WordPress post title
+                // If title_en is empty, check standard WordPress post title (Gutenberg & Classic)
                 var titleEnVal = getFieldValue('title_en');
                 if (!titleEnVal) {
-                    var wpTitleInput = document.querySelector('#title') ||
-                                       document.querySelector('[name="post_title"]') ||
-                                       document.querySelector('.editor-post-title__input');
-                    if (wpTitleInput) {
-                        var rawTitle = wpTitleInput.value || wpTitleInput.innerText || '';
-                        if (rawTitle.trim()) {
-                            titleEnVal = rawTitle.trim();
-                            setFieldValue('title_en', titleEnVal);
+                    if (window.wp && wp.data && wp.data.select && wp.data.select('core/editor')) {
+                        try {
+                            var gTitle = wp.data.select('core/editor').getEditedPostAttribute('title');
+                            if (gTitle && gTitle.trim()) titleEnVal = gTitle.trim();
+                        } catch(e) {}
+                    }
+                    if (!titleEnVal) {
+                        var wpTitleInput = document.querySelector('#title') ||
+                                           document.querySelector('[name="post_title"]') ||
+                                           document.querySelector('.editor-post-title__input') ||
+                                           document.querySelector('.wp-block-post-title');
+                        if (wpTitleInput) {
+                            var rawTitle = wpTitleInput.value || wpTitleInput.innerText || wpTitleInput.textContent || '';
+                            if (rawTitle.trim()) {
+                                titleEnVal = rawTitle.trim();
+                            }
                         }
+                    }
+                    if (titleEnVal) {
+                        setFieldValue('title_en', titleEnVal);
                     }
                 }
 
-                // If content_en is empty on post/insight, check standard WordPress content
+                // If content_en is empty on post/insight, check standard WordPress content (Gutenberg & Classic)
                 var contentEnVal = getFieldValue('content_en');
                 if (!contentEnVal) {
-                    if (window.tinyMCE && tinyMCE.get('content')) {
-                        contentEnVal = tinyMCE.get('content').getContent();
-                    } else {
-                        var wpContent = document.querySelector('#content');
-                        if (wpContent && wpContent.value) contentEnVal = wpContent.value;
+                    if (window.wp && wp.data && wp.data.select && wp.data.select('core/editor')) {
+                        try {
+                            var gContent = wp.data.select('core/editor').getEditedPostContent();
+                            if (gContent && gContent.trim()) contentEnVal = gContent.trim();
+                        } catch(e) {}
+                    }
+                    if (!contentEnVal) {
+                        if (window.tinyMCE && tinyMCE.get('content')) {
+                            contentEnVal = tinyMCE.get('content').getContent();
+                        } else {
+                            var wpContent = document.querySelector('#content');
+                            if (wpContent && wpContent.value) contentEnVal = wpContent.value;
+                        }
                     }
                 }
 
@@ -969,6 +1056,7 @@ add_action('admin_footer', function() {
                     { en: 'description_en', ar: 'description_ar', label: 'Description' },
                     { en: 'content_en', ar: 'content_ar', label: 'Content', fallbackEn: contentEnVal },
                     { en: 'tag_en', ar: 'tag_ar', label: 'Tag' },
+                    { en: 'category_en', ar: 'category_ar', label: 'Category' },
                     { en: 'excerpt_en', ar: 'excerpt_ar', label: 'Excerpt' },
                     { en: 'read_time_en', ar: 'read_time_ar', label: 'Read Time' },
                     { en: 'specs_en', ar: 'specs_ar', label: 'Specifications' },
@@ -986,13 +1074,12 @@ add_action('admin_footer', function() {
                     var enText = getFieldValue(pair.en) || pair.fallbackEn || '';
                     if (!enText || !enText.trim()) continue;
 
-                    buttonEl.innerHTML = '⏳ Translating ' + pair.label + '...';
-
-                    // Translate if Arabic is empty or matches English
+                    // Translate if Arabic is empty OR if it doesn't contain Arabic letters (e.g. contains English text)
                     var arText = getFieldValue(pair.ar);
-                    if (!arText || arText.trim() === '' || arText.trim() === enText.trim()) {
+                    if (!arText || !hasArabic(arText) || arText.trim() === enText.trim()) {
+                        buttonEl.innerHTML = '⏳ Translating ' + pair.label + '...';
                         var arabic = await callTranslateApi(enText);
-                        if (arabic) {
+                        if (arabic && hasArabic(arabic)) {
                             setFieldValue(pair.ar, arabic);
                             translatedCount++;
                         }
