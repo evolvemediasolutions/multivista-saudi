@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { LanguageProvider, useLanguage } from './context/LanguageContext'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
@@ -27,6 +27,45 @@ import InsightDetail from './pages/InsightDetail'
 import EventDetail from './pages/EventDetail'
 import { useEffect } from 'react'
 import { preloadCmsData } from './services/graphql'
+
+function ScrollToTop() {
+  const { pathname, search, hash } = useLocation()
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTo(0, 0)
+      document.body.scrollTo(0, 0)
+    } else {
+      const id = hash.replace('#', '')
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        window.scrollTo(0, 0)
+      }
+    }
+  }, [pathname, search, hash])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement)?.closest('a')
+      if (target && target instanceof HTMLAnchorElement) {
+        const href = target.getAttribute('href')
+        if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:') && (!href.includes('#') || href.endsWith('#') || href.endsWith('#top'))) {
+          setTimeout(() => {
+            window.scrollTo(0, 0)
+          }, 0)
+        }
+      }
+    }
+
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
+
+  return null
+}
 
 function RootRedirect() {
   const { locale } = useLanguage()
@@ -57,9 +96,16 @@ function LocaleWrapper({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
   return (
     <LanguageProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Base Redirect */}
           <Route path="/" element={<RootRedirect />} />

@@ -53,6 +53,15 @@ export default function Navbar() {
 
   const navItems = [
     {
+      id: 'solutions',
+      label: t('nav.solutions'),
+      path: '/solutions',
+      dropdown: solutionsData.map((s) => ({
+        label: s.title[locale],
+        path: `/solutions/${s.slug}`
+      }))
+    },
+    {
       id: 'about',
       label: t('nav.about'),
       path: '/about',
@@ -65,23 +74,14 @@ export default function Navbar() {
       ]
     },
     {
-      id: 'solutions',
-      label: t('nav.solutions'),
-      path: '/solutions',
-      dropdown: solutionsData.map((s) => ({
-        label: s.title[locale],
-        path: `/solutions/${s.slug}`
-      }))
+      id: 'insights',
+      label: t('nav.insights'),
+      path: '/insights'
     },
     {
       id: 'events',
       label: t('nav.events'),
       path: '/events'
-    },
-    {
-      id: 'sustainability',
-      label: t('nav.sustainability'),
-      path: '/sustainability'
     },
     {
       id: 'careers',
@@ -91,11 +91,6 @@ export default function Navbar() {
         { label: locale === 'ar' ? 'لماذا 3T' : 'Why 3T', path: '/why-3t' },
         { label: locale === 'ar' ? 'الوظائف الشاغرة' : 'Open Positions', path: '/open-positions' }
       ]
-    },
-    {
-      id: 'insights',
-      label: t('nav.insights'),
-      path: '/insights'
     }
   ]
 
@@ -116,7 +111,11 @@ export default function Navbar() {
           
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to={localizedPath('/')} className="flex items-center">
+            <Link 
+              to={localizedPath('/')} 
+              onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
+              className="flex items-center"
+            >
               <img 
                 src="/LOGO/3T-Saudi.jpg" 
                 alt="3T Saudi Logo" 
@@ -137,7 +136,10 @@ export default function Navbar() {
                 onMouseLeave={() => setActiveDropdown(null)}
               >
                 <button
-                  onClick={() => navigate(localizedPath(item.path))}
+                  onClick={() => {
+                    navigate(localizedPath(item.path))
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+                  }}
                   className={`px-4 py-2 text-[12px] font-semibold transition-colors flex items-center gap-1 hover:text-brand-primary rounded-md uppercase tracking-wider cursor-pointer ${
                     isActive(item.path) ? 'text-brand-primary font-bold bg-brand-light/35' : 'text-slate-700'
                   }`}
@@ -164,7 +166,12 @@ export default function Navbar() {
                         <Link
                           key={idx}
                           to={localizedPath(sub.path)}
-                          onClick={() => setActiveDropdown(null)}
+                          onClick={() => {
+                            setActiveDropdown(null)
+                            if (!sub.path.includes('#')) {
+                              window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+                            }
+                          }}
                           className="block px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 hover:bg-brand-light/50 hover:text-brand-primary transition-colors border-l-2 border-transparent hover:border-brand-primary rtl:border-l-0 rtl:hover:border-r-2 rtl:border-transparent rtl:hover:border-brand-primary"
                         >
                           {sub.label}
@@ -192,6 +199,7 @@ export default function Navbar() {
             {/* Contact Button */}
             <Link
               to={localizedPath('/contact')}
+              onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })}
               className="flex items-center justify-center px-5 h-11 bg-brand-secondary hover:bg-brand-primary text-white text-[12px] font-bold rounded-lg shadow-md hover:shadow-brand-primary/10 transition-all duration-200 uppercase tracking-wider"
             >
               {t('nav.contact')}
@@ -230,6 +238,7 @@ export default function Navbar() {
                   onClick={() => {
                     if (!item.dropdown) {
                       navigate(localizedPath(item.path))
+                      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
                       setIsOpen(false)
                     } else {
                       setActiveDropdown(activeDropdown === item.id ? null : item.id)
@@ -250,7 +259,12 @@ export default function Navbar() {
                       <Link
                         key={idx}
                         to={localizedPath(sub.path)}
-                        onClick={() => setIsOpen(false)}
+                        onClick={() => {
+                          setIsOpen(false)
+                          if (!sub.path.includes('#')) {
+                            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+                          }
+                        }}
                         className="block px-3 py-2 text-sm font-semibold uppercase tracking-wide text-slate-600 hover:text-brand-primary"
                       >
                         {sub.label}
@@ -263,7 +277,10 @@ export default function Navbar() {
             <div className="pt-4 pb-2 border-t border-slate-200 mt-2 px-3">
               <Link
                 to={localizedPath('/contact')}
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false)
+                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' })
+                }}
                 className="block text-center w-full py-2.5 bg-brand-secondary hover:bg-brand-primary text-white font-bold uppercase tracking-wider rounded-lg"
               >
                 {t('nav.contact')}
