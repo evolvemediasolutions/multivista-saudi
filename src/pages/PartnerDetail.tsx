@@ -25,7 +25,7 @@ function ProductCard({ prod, locale, dir, onViewMore }: ProductCardProps) {
           src={prod.image}
           alt={title}
           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
+          decoding="async"
         />
       </div>
 
@@ -237,29 +237,40 @@ export default function PartnerDetail() {
 
   const activeSlug = partnerSlug || slug || ''
   const partner = partnersData.find((p) => p.slug === activeSlug)
+
+  // 1. Instant 0ms Synchronous Cache: Always reflects the new partner immediately upon tab switch
+  const [prevSlug, setPrevSlug] = useState(activeSlug)
   const [cmsProducts, setCmsProducts] = useState<PartnerProduct[]>(() =>
     getCachedPartnerProducts(activeSlug)
   )
 
+  // When activeSlug changes (user clicked a different partner tab),
+  // immediately swap to that partner's cached products BEFORE painting (0ms lag!)
+  if (prevSlug !== activeSlug) {
+    setPrevSlug(activeSlug)
+    setCmsProducts(getCachedPartnerProducts(activeSlug))
+  }
+
   useEffect(() => {
     let mounted = true
-    const fetchFreshProducts = () => {
+    const fetchFreshProducts = (force = false) => {
       if (activeSlug) {
-        getPartnerProducts(activeSlug).then((prods) => {
-          if (mounted && prods) {
+        getPartnerProducts(activeSlug, force).then((prods) => {
+          if (mounted && prods && prods.length > 0) {
             setCmsProducts(prods)
           }
         })
       }
     }
 
+    // Background revalidation (does not block instant UI render)
     fetchFreshProducts()
 
     // Zero-delay auto-update: Whenever user switches back from WordPress Admin tab,
     // immediately re-fetch the latest published changes!
     const handleRevalidate = () => {
       if (document.visibilityState === 'visible') {
-        fetchFreshProducts()
+        fetchFreshProducts(true)
       }
     }
 
@@ -274,7 +285,13 @@ export default function PartnerDetail() {
   }, [activeSlug])
 
   const mergeWithCms = (staticList: any[]) => {
-    const formattedCms = cmsProducts.map((p) => {
+    const currentSlug = activeSlug.toLowerCase()
+    // CRITICAL: Ensure only products belonging to the CURRENT partner are processed
+    const relevantCms = cmsProducts.filter(
+      (p) => !p.partner || p.partner.toLowerCase() === currentSlug
+    )
+
+    const formattedCms = relevantCms.map((p) => {
       const cleanTitle = (p.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, '')
       const matchingStatic = staticList.find(
         (s) => (s.title?.en || '').toLowerCase().replace(/[^a-z0-9]/g, '') === cleanTitle
@@ -492,6 +509,7 @@ export default function PartnerDetail() {
                   <Link
                     key={p.slug}
                     to={localizedPath(`/solutions/refrigeration-hvac-solutions/${p.slug}`)}
+                    onMouseEnter={() => getPartnerProducts(p.slug)}
                     className={`px-6 py-4 rounded-2xl bg-white transition-all duration-300 flex items-center justify-center w-[220px] sm:w-[260px] h-[95px] overflow-hidden ${isCurrent
                         ? 'border-2 border-brand-primary shadow-md ring-4 ring-brand-primary/10'
                         : 'border border-slate-200/80 hover:border-brand-primary/50 hover:shadow-xs opacity-75 hover:opacity-100'
@@ -518,6 +536,7 @@ export default function PartnerDetail() {
                   <Link
                     key={p.slug}
                     to={localizedPath(`/solutions/automation-control/${p.slug}`)}
+                    onMouseEnter={() => getPartnerProducts(p.slug)}
                     className={`px-6 py-4 rounded-2xl bg-white transition-all duration-300 flex items-center justify-center w-[220px] sm:w-[260px] h-[95px] overflow-hidden ${isCurrent
                         ? 'border-2 border-brand-primary shadow-md ring-4 ring-brand-primary/10'
                         : 'border border-slate-200/80 hover:border-brand-primary/50 hover:shadow-xs opacity-75 hover:opacity-100'

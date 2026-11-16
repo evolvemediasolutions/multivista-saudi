@@ -2,6 +2,7 @@ import { eventsData, type EventItem } from '../data/events'
 import { jobsData, type JobOpening } from '../data/jobs'
 import { solutionsData, type Solution } from '../data/solutions'
 import { insightsData, type InsightItem } from '../data/insights'
+import { seedProducts } from '../data/seedProducts'
 
 export type BlogPostItem = InsightItem
 export type { InsightItem }
@@ -567,6 +568,9 @@ export interface PartnerProduct {
 // In-Memory and LocalStorage Cache for 0ms Instant Rendering
 const CACHE_KEY_PRODUCTS = 'mvgl_cache_partner_products'
 let inMemoryProducts: PartnerProduct[] | null = null
+let productsFetchPromise: Promise<PartnerProduct[]> | null = null
+let lastProductsFetchTime = 0
+const PRODUCTS_CACHE_TTL = 30000 // 30 seconds fresh cache TTL
 
 /**
  * Synchronous instant cache getter (0ms latency, zero delay)
@@ -581,106 +585,139 @@ export function getCachedPartnerProducts(partnerSlug?: string): PartnerProduct[]
     } catch {}
   }
 
-  if (inMemoryProducts && inMemoryProducts.length > 0) {
-    if (partnerSlug) {
-      return inMemoryProducts.filter((p) => p.partner === partnerSlug.toLowerCase())
-    }
-    return inMemoryProducts
+  // Fallback to bundled seed products if cache is completely fresh
+  const list = inMemoryProducts && inMemoryProducts.length > 0 ? inMemoryProducts : seedProducts
+
+  if (partnerSlug) {
+    const slugClean = partnerSlug.toLowerCase()
+    return list.filter((p) => p.partner === slugClean)
   }
-  return []
+  return list
 }
 
 /**
  * Fetch products assigned to a specific partner from WordPress with instant cache & background revalidation
  */
-export async function getPartnerProducts(partnerSlug?: string): Promise<PartnerProduct[]> {
-  const query = `
-    query GetPartnerProducts {
-      products(first: 200) {
-        nodes {
-          id
-          slug
-          title
-          featuredImage {
-            node {
-              sourceUrl
-            }
-          }
-          productFields {
-            partner
-            solution
-            subcategory
-            titleEn
-            titleAr
-            specsEn
-            specsAr
-            descriptionEn
-            descriptionAr
-            exploreUrl
-            brochurePdf {
-              node {
-                mediaItemUrl
+export async function getPartnerProducts(partnerSlug?: string, forceRefresh = false): Promise<PartnerProduct[]> {
+  const now = Date.now()
+  const hasLoaded = inMemoryProducts && inMemoryProducts.length > 0
+
+  // 1. Instant 0ms return if fresh products are already in memory
+  if (hasLoaded && !forceRefresh && (now - lastProductsFetchTime < PRODUCTS_CACHE_TTL)) {
+    if (partnerSlug) {
+      return inMemoryProducts!.filter((p) => p.partner === partnerSlug.toLowerCase())
+    }
+    return inMemoryProducts!
+  }
+
+  // 2. Deduplicate in-flight requests so multiple calls don't fire duplicate queries
+  if (!productsFetchPromise || forceRefresh) {
+    productsFetchPromise = (async () => {
+      try {
+        const query = `
+          query GetPartnerProducts {
+            products(first: 200) {
+              nodes {
+                id
+                slug
+                title
+                featuredImage {
+                  node {
+                    sourceUrl
+                  }
+                }
+                productFields {
+                  partner
+                  solution
+                  subcategory
+                  titleEn
+                  titleAr
+                  specsEn
+                  specsAr
+                  descriptionEn
+                  descriptionAr
+                  exploreUrl
+                  brochurePdf {
+                    node {
+                      mediaItemUrl
+                    }
+                  }
+                }
               }
             }
           }
+        `
+
+        const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
+        if (data?.products?.nodes && data.products.nodes.length > 0) {
+          const all: PartnerProduct[] = data.products.nodes.map((node) => {
+            const f = node.productFields || {}
+            const rawPartner = Array.isArray(f.partner) ? f.partner[0] : f.partner
+            const partner = typeof rawPartner === 'string' ? rawPartner.trim().toLowerCase() : ''
+            const rawSolution = Array.isArray(f.solution) ? f.solution[0] : f.solution
+            const solution = typeof rawSolution === 'string' ? rawSolution.trim().toLowerCase() : ''
+            const subcategory = typeof f.subcategory === 'string' && f.subcategory.trim() ? f.subcategory.trim().toLowerCase() : 'all'
+
+            const titleEn = f.titleEn || node.title || 'Product'
+            const titleAr = f.titleAr || titleEn
+
+            return {
+              id: node.slug || node.id,
+              slug: node.slug || node.id,
+              partner,
+              solution,
+              category: subcategory,
+              tag: partner.replace('-', ' ').toUpperCase(),
+              title: {
+                en: titleEn,
+                ar: titleAr,
+              },
+              desc: {
+                en: f.descriptionEn || '',
+                ar: f.descriptionAr || f.descriptionEn || '',
+              },
+              specs: {
+                en: f.specsEn || '',
+                ar: f.specsAr || f.specsEn || '',
+              },
+              image:
+                node.featuredImage?.node?.sourceUrl ||
+                'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
+              brochureUrl: f.brochurePdf?.node?.mediaItemUrl || undefined,
+              exploreUrl: f.exploreUrl || undefined,
+            }
+          })
+
+          inMemoryProducts = all
+          lastProductsFetchTime = Date.now()
+          try {
+            localStorage.setItem(CACHE_KEY_PRODUCTS, JSON.stringify(all))
+          } catch {}
+
+          return all
         }
+      } catch (err) {
+        console.warn('Error fetching products:', err)
+      } finally {
+        productsFetchPromise = null
       }
-    }
-  `
-
-  const data = await fetchGraphQL<{ products: { nodes: any[] } }>(query)
-  if (data?.products?.nodes && data.products.nodes.length > 0) {
-    const all: PartnerProduct[] = data.products.nodes.map((node) => {
-      const f = node.productFields || {}
-      const rawPartner = Array.isArray(f.partner) ? f.partner[0] : f.partner
-      const partner = typeof rawPartner === 'string' ? rawPartner.trim().toLowerCase() : ''
-      const rawSolution = Array.isArray(f.solution) ? f.solution[0] : f.solution
-      const solution = typeof rawSolution === 'string' ? rawSolution.trim().toLowerCase() : ''
-      const subcategory = typeof f.subcategory === 'string' && f.subcategory.trim() ? f.subcategory.trim().toLowerCase() : 'all'
-
-      const titleEn = f.titleEn || node.title || 'Product'
-      const titleAr = f.titleAr || titleEn
-
-      return {
-        id: node.slug || node.id,
-        slug: node.slug || node.id,
-        partner,
-        solution,
-        category: subcategory,
-        tag: partner.replace('-', ' ').toUpperCase(),
-        title: {
-          en: titleEn,
-          ar: titleAr,
-        },
-        desc: {
-          en: f.descriptionEn || '',
-          ar: f.descriptionAr || f.descriptionEn || '',
-        },
-        specs: {
-          en: f.specsEn || '',
-          ar: f.specsAr || f.specsEn || '',
-        },
-        image:
-          node.featuredImage?.node?.sourceUrl ||
-          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80',
-        brochureUrl: f.brochurePdf?.node?.mediaItemUrl || undefined,
-        exploreUrl: f.exploreUrl || undefined,
-      }
-    })
-
-    // Update in-memory and persistent cache
-    inMemoryProducts = all
-    try {
-      localStorage.setItem(CACHE_KEY_PRODUCTS, JSON.stringify(all))
-    } catch {}
-
-    if (partnerSlug) {
-      return all.filter((p) => p.partner === partnerSlug.toLowerCase())
-    }
-    return all
+      return getCachedPartnerProducts()
+    })()
   }
 
-  return getCachedPartnerProducts(partnerSlug)
+  // 3. Stale-While-Revalidate: If we have cache, return it immediately (0ms) while promise updates in background!
+  if (hasLoaded && !forceRefresh) {
+    if (partnerSlug) {
+      return inMemoryProducts!.filter((p) => p.partner === partnerSlug.toLowerCase())
+    }
+    return inMemoryProducts!
+  }
+
+  const all = await productsFetchPromise
+  if (partnerSlug) {
+    return all.filter((p) => p.partner === partnerSlug.toLowerCase())
+  }
+  return all
 }
 
 /**
