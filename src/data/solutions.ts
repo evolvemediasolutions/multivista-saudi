@@ -49,33 +49,62 @@ export const solutionsData: Solution[] = [
     partners: ['kirloskar-pneumatic']
   },
   {
-    id: 'refrigeration-hvac-solutions',
-    slug: 'refrigeration-hvac-solutions',
+    id: 'refrigeration-solutions',
+    slug: 'refrigeration-solutions',
     category: 'cooling',
     title: {
-      en: 'Refrigeration & HVAC Solutions',
-      ar: 'حلول التبريد والتكييف'
+      en: 'Refrigeration Solutions',
+      ar: 'حلول التبريد'
     },
     description: {
-      en: 'Delivering comprehensive industrial refrigeration, process cooling, and large-scale HVAC systems, we provide robust solutions engineered for high-efficiency temperature control in demanding industrial and commercial environments.',
-      ar: 'من خلال تقديم أنظمة التبريد الصناعي وتبريد العمليات وأنظمة التكييف واسعة النطاق، نوفر حلولاً موثوقة مصممة للتحكم في درجات الحرارة بأعلى كفاءة في أصعب البيئات الصناعية والتجارية.'
+      en: 'Delivering robust industrial refrigeration, ammonia screw compressor packages, and cold chain infrastructure, we provide high-efficiency temperature control systems engineered for demanding industrial processing, food preservation, chemical plants, and cold logistics.',
+      ar: 'من خلال تقديم أنظمة التبريد الصناعي، وحزم ضواغط الأمونيا اللولبية، وبنية سلاسل الإمداد المبردة، نوفر حلولاً موثوقة وعالية الكفاءة للتحكم في درجات الحرارة في العمليات الصناعية ومعالجة الأغذية والمصانع الكيميائية والبتروكيماويات.'
     },
     features: {
       en: [
-        'Water-Cooled & Air-Cooled Industrial Chillers',
         'Ammonia & Eco-Refrigerant Screw Compressor Packages',
-        'Cold Chain Storage & Blast Freezing Solutions',
-        'Process Gas Cooling & Heat Rejection Systems'
+        'Cold Storage & Turnkey Blast Freezing Logistics',
+        'Process Gas Refrigeration & Liquefaction Systems',
+        'Evaporative Condensers & Secondary Brine Coolers'
       ],
       ar: [
-        'مبردات صناعية مبردة بالماء والهواء',
         'حزم ضواغط لولبية لغاز الأمونيا والمبردات الصديقة للبيئة',
-        'حلول سلاسل التخزين البارد والتجميد السريع',
-        'تبريد غازات العمليات وأنظمة التبادل الحراري'
+        'مستودعات التخزين البارد وبنية التجميد السريع الجاهزة',
+        'تبريد غازات العمليات وأنظمة التبريد للبتروكيماويات',
+        'مكثفات تبخيرية ومبردات محاليل ثانوية متقدمة'
+      ]
+    },
+    image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
+    partners: ['kirloskar-pneumatic']
+  },
+  {
+    id: 'hvac-solutions',
+    slug: 'hvac-solutions',
+    category: 'cooling',
+    title: {
+      en: 'HVAC Solutions',
+      ar: 'حلول التكييف'
+    },
+    description: {
+      en: 'Providing advanced water-cooled chillers, air-cooled chillers, and large-scale central HVAC systems, we engineer reliable climate control and process cooling solutions designed for commercial developments, data centers, district cooling, and harsh desert environments.',
+      ar: 'من خلال تقديم مبردات المياه ومبردات الهواء المتقدمة، وأنظمة التكييف المركزية واسعة النطاق، نوفر حلولاً موثوقة وعالية الكفاءة للتحكم في المناخ وتبريد العمليات للمجمعات التجارية ومراكز البيانات ومشاريع تبريد المناطق والمستشفيات تحت أصعب الظروف المناخية الصحراوية.'
+    },
+    features: {
+      en: [
+        'Water-Cooled & Air-Cooled High-Efficiency Chillers',
+        'Magnetic Bearing Oil-Free Centrifugal Chillers',
+        'Mission-Critical Data Center Cooling Infrastructure',
+        'Industrial Heat Recovery & High-Capacity Heat Pumps'
+      ],
+      ar: [
+        'مبردات صناعية مبردة بالماء والهواء عالية الكفاءة',
+        'مبردات طاردة مركزية بمحامل مغناطيسية خالية من الزيت',
+        'بنية تبريد متقدمة وموثوقة لمراكز البيانات والمنشآت الحيوية',
+        'مضخات حرارية صناعية وأنظمة استرداد الطاقة والحرارة'
       ]
     },
     image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
-    partners: ['kirloskar-pneumatic', 'kirloskar-chillers']
+    partners: ['kirloskar-chillers']
   },
   {
     id: 'automation-control',

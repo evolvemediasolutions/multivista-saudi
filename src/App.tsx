@@ -20,6 +20,8 @@ import OpenPositions from './pages/OpenPositions'
 import AirGasSolutions from './pages/AirGasSolutions'
 import AutomationControlSolutions from './pages/AutomationControlSolutions'
 import RefrigerationHvacSolutions from './pages/RefrigerationHvacSolutions'
+import RefrigerationSolutions from './pages/RefrigerationSolutions'
+import HvacSolutions from './pages/HvacSolutions'
 import NonMetallicSolutions from './pages/NonMetallicSolutions'
 import FirePumpSolutions from './pages/FirePumpSolutions'
 import JobDetail from './pages/JobDetail'
@@ -148,6 +150,38 @@ function App() {
             element={
               <LocaleWrapper>
                 <AirGasSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/refrigeration-solutions"
+            element={
+              <LocaleWrapper>
+                <RefrigerationSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/refrigeration-solution"
+            element={
+              <LocaleWrapper>
+                <RefrigerationSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/hvac-solutions"
+            element={
+              <LocaleWrapper>
+                <HvacSolutions />
+              </LocaleWrapper>
+            }
+          />
+          <Route
+            path="/:lang/solutions/hvac-solution"
+            element={
+              <LocaleWrapper>
+                <HvacSolutions />
               </LocaleWrapper>
             }
           />

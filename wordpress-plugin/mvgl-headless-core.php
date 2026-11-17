@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MVGL Saudi Headless CMS Core
  * Description: Registers Products, Events, Careers Post Types, ACF Fields, WPGraphQL Schemas, Auto-Translation to Arabic, and CORS.
- * Version: 2.4.1
+ * Version: 2.4.2
  * Author: MVGL / Antigravity
  */
 
@@ -220,7 +220,7 @@ add_action('acf/init', function() {
                 'required' => 1,
                 'choices' => [
                     'kirloskar-pneumatic' => 'Kirloskar Pneumatic (Air & Gas / Refrigeration)',
-                    'kirloskar-chillers' => 'Kirloskar Chillers (HVAC & Process Cooling)',
+                    'kirloskar-chillers' => 'Kirloskar Chillers (HVAC Solutions)',
                     'rockwell-automation' => 'Rockwell Automation (Industrial Automation)',
                     'spp-pumps' => 'SPP Pumps (Fire Protection & Critical Pumps)',
                     'epp-composites' => 'EPP Composites (FRP/GRP Non-Metallic)',
@@ -238,7 +238,9 @@ add_action('acf/init', function() {
                 'required' => 1,
                 'choices' => [
                     'air-gas-solutions' => 'Air & Gas Solutions',
-                    'refrigeration-hvac-solutions' => 'Refrigeration & HVAC Solutions',
+                    'refrigeration-solutions' => 'Refrigeration Solutions',
+                    'hvac-solutions' => 'HVAC Solutions',
+                    'refrigeration-hvac-solutions' => 'Refrigeration & HVAC Solutions (Legacy)',
                     'automation-control' => 'Automation & Control Solutions',
                     'non-metallic-solutions' => 'Non-Metallic Solutions',
                     'fire-pump-solutions' => 'Fire Pump Solutions',

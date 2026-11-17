@@ -73,7 +73,7 @@ export const partnersData: Partner[] = [
       en: 'Founded in 1958, Kirloskar Pneumatic develops engineering technologies supporting diverse industrial applications.',
       ar: 'تأسست شركة كيرلوسكار نيوماتيك (Kirloskar Pneumatic) في عام 1958، وتطور تكنولوجيات هندسية تدعم مختلف التطبيقات الصناعية.'
     },
-    solutions: ['compressed-air', 'industrial-refrigeration', 'process-gas-compression', 'air-gas-solutions', 'refrigeration-hvac-solutions']
+    solutions: ['compressed-air', 'industrial-refrigeration', 'process-gas-compression', 'air-gas-solutions', 'refrigeration-solutions', 'refrigeration-solution', 'refrigeration-hvac-solutions']
   },
   {
     id: 'kirloskar-chillers',
@@ -88,7 +88,7 @@ export const partnersData: Partner[] = [
       en: 'Kirloskar Chillers brings decades of experience in HVAC&R, with a focus on reliability, operating efficiency and responsive after-sales support.',
       ar: 'تقدم كيرلوسكار تشيلرز (Kirloskar Chillers) عقوداً من الخبرة في مجال التدفئة والتهوية وتكييف الهواء والتبريد (HVAC&R)، مع التركيز على الموثوقية والكفاءة التشغيلية والدعم المستجيب لما بعد البيع.'
     },
-    solutions: ['hvac-process-cooling', 'industrial-refrigeration', 'refrigeration-hvac-solutions']
+    solutions: ['hvac-process-cooling', 'industrial-refrigeration', 'hvac-solutions', 'hvac-solution', 'refrigeration-hvac-solutions']
   },
   {
     id: 'hms-networks',

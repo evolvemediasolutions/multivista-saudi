@@ -357,8 +357,14 @@ export default function PartnerDetail() {
   const localizedPath = (path: string) => `/${locale}${path === '/' ? '' : path}`
 
   const isRefrigerationPartner =
-    solutionSlug === 'refrigeration-hvac-solutions' ||
-    solutionSlug === 'refrigeration-hvac'
+    solutionSlug === 'refrigeration-solutions' ||
+    solutionSlug === 'refrigeration-solution' ||
+    ((solutionSlug === 'refrigeration-hvac-solutions' || solutionSlug === 'refrigeration-hvac') && activeSlug === 'kirloskar-pneumatic')
+
+  const isHvacPartner =
+    solutionSlug === 'hvac-solutions' ||
+    solutionSlug === 'hvac-solution' ||
+    ((solutionSlug === 'refrigeration-hvac-solutions' || solutionSlug === 'refrigeration-hvac') && activeSlug === 'kirloskar-chillers')
 
   const isAirGasPartner =
     solutionSlug === 'air-gas-solutions'
@@ -406,7 +412,10 @@ export default function PartnerDetail() {
       name: 'Kirloskar Pneumatic',
       logo: '/PARTNERS LOGO/KIRLOSKAR PNEUMATIC.jpg',
       imgClass: 'h-14 sm:h-16 w-auto max-w-[210px]'
-    },
+    }
+  ]
+
+  const hvacPartners = [
     {
       slug: 'kirloskar-chillers',
       name: 'Kirloskar Chillers',
@@ -470,8 +479,12 @@ export default function PartnerDetail() {
             <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
               {isRefrigerationPartner
                 ? locale === 'ar'
-                  ? `الرئيسية / الحلول الصناعية / حلول التبريد والتكييف / ${partner.name}`
-                  : `HOME / INDUSTRIAL SOLUTIONS / REFRIGERATION & HVAC SOLUTIONS / ${partner.name.toUpperCase()}`
+                  ? `الرئيسية / الحلول الصناعية / حلول التبريد / ${partner.name}`
+                  : `HOME / INDUSTRIAL SOLUTIONS / REFRIGERATION SOLUTIONS / ${partner.name.toUpperCase()}`
+                : isHvacPartner
+                ? locale === 'ar'
+                  ? `الرئيسية / الحلول الصناعية / حلول التكييف / ${partner.name}`
+                  : `HOME / INDUSTRIAL SOLUTIONS / HVAC SOLUTIONS / ${partner.name.toUpperCase()}`
                 : isAirGasPartner
                 ? locale === 'ar'
                   ? `الرئيسية / الحلول الصناعية / حلول الهواء والغاز / ${partner.name}`
@@ -508,7 +521,34 @@ export default function PartnerDetail() {
                 return (
                   <Link
                     key={p.slug}
-                    to={localizedPath(`/solutions/refrigeration-hvac-solutions/${p.slug}`)}
+                    to={localizedPath(`/solutions/refrigeration-solutions/${p.slug}`)}
+                    onMouseEnter={() => getPartnerProducts(p.slug)}
+                    className={`px-6 py-4 rounded-2xl bg-white transition-all duration-300 flex items-center justify-center w-[220px] sm:w-[260px] h-[95px] overflow-hidden ${isCurrent
+                        ? 'border-2 border-brand-primary shadow-md ring-4 ring-brand-primary/10'
+                        : 'border border-slate-200/80 hover:border-brand-primary/50 hover:shadow-xs opacity-75 hover:opacity-100'
+                      }`}
+                  >
+                    <img
+                      src={p.logo}
+                      alt={p.name}
+                      className={`object-contain transition-transform duration-300 ${p.imgClass || 'h-12 sm:h-14 w-auto max-w-[200px]'}`}
+                    />
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      ) : isHvacPartner ? (
+        <section className="w-full bg-[#f4f8fb] py-8 my-4">
+          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+              {hvacPartners.map((p) => {
+                const isCurrent = partner.slug === p.slug
+                return (
+                  <Link
+                    key={p.slug}
+                    to={localizedPath(`/solutions/hvac-solutions/${p.slug}`)}
                     onMouseEnter={() => getPartnerProducts(p.slug)}
                     className={`px-6 py-4 rounded-2xl bg-white transition-all duration-300 flex items-center justify-center w-[220px] sm:w-[260px] h-[95px] overflow-hidden ${isCurrent
                         ? 'border-2 border-brand-primary shadow-md ring-4 ring-brand-primary/10'

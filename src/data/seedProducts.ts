@@ -447,7 +447,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "turbolev-kcm",
     "slug": "turbolev-kcm",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "centrifugal-chillers",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -468,7 +468,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "turbolev-ksm-kdm",
     "slug": "turbolev-ksm-kdm",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "centrifugal-chillers",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -489,7 +489,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "water-cooled-screw-chiller",
     "slug": "water-cooled-screw-chiller",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "screw-chillers",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -510,7 +510,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "air-cooled-screw-chiller",
     "slug": "air-cooled-screw-chiller",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "screw-chillers",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -531,7 +531,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "data-center-chillers",
     "slug": "data-center-chillers",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "mission-critical",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -552,7 +552,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "air-to-water-industrial-heat-pumps",
     "slug": "air-to-water-industrial-heat-pumps",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "heat-pumps",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {
@@ -573,7 +573,7 @@ export const seedProducts: PartnerProduct[] = [
     "id": "water-to-water-heat-recovery-heat-pumps",
     "slug": "water-to-water-heat-recovery-heat-pumps",
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "heat-pumps",
     "tag": "KIRLOSKAR CHILLERS",
     "title": {

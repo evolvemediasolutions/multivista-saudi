@@ -261,7 +261,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "centrifugal-chillers",
     "title_en": "TURBOLEV - KCM",
     "title_ar": "TURBOLEV - KCM",
@@ -274,7 +274,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "centrifugal-chillers",
     "title_en": "TURBOLEV - KSM / KDM",
     "title_ar": "TURBOLEV - KSM / KDM",
@@ -287,7 +287,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "screw-chillers",
     "title_en": "WATER COOLED SCREW CHILLER",
     "title_ar": "WATER COOLED SCREW CHILLER",
@@ -300,7 +300,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "screw-chillers",
     "title_en": "AIR COOLED SCREW CHILLER",
     "title_ar": "AIR COOLED SCREW CHILLER",
@@ -313,7 +313,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "mission-critical",
     "title_en": "DATA CENTER CHILLERS",
     "title_ar": "DATA CENTER CHILLERS",
@@ -326,7 +326,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "heat-pumps",
     "title_en": "Air-to-Water Industrial Heat Pumps",
     "title_ar": "مضخات حرارية صناعية من الهواء إلى الماء",
@@ -339,7 +339,7 @@
   },
   {
     "partner": "kirloskar-chillers",
-    "solution": "refrigeration-hvac-solutions",
+    "solution": "hvac-solutions",
     "category": "heat-pumps",
     "title_en": "Water-to-Water Heat Recovery Heat Pumps",
     "title_ar": "مضخات حرارية لاسترداد الطاقة من الماء إلى الماء",

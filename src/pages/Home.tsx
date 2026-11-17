@@ -126,12 +126,20 @@ export default function Home() {
       slug: 'air-gas-solutions'
     },
     {
-      title: { en: 'Refrigeration & HVAC Solutions', ar: 'حلول التبريد والتكييف' },
+      title: { en: 'Refrigeration Solutions', ar: 'حلول التبريد' },
       desc: {
-        en: 'Industrial refrigeration compressors, chillers, and large-scale HVAC temperature control.',
-        ar: 'ضواغط التبريد الصناعي، والمبردات وأنظمة التكييف واسعة النطاق.'
+        en: 'Industrial refrigeration compressors, ammonia packages, and turnkey cold chain temperature control.',
+        ar: 'ضواغط التبريد الصناعي، وحزم ضواغط الأمونيا، وأنظمة التحكم بالحرارة لسلاسل التبريد.'
       },
-      slug: 'refrigeration-hvac-solutions'
+      slug: 'refrigeration-solutions'
+    },
+    {
+      title: { en: 'HVAC Solutions', ar: 'حلول التكييف' },
+      desc: {
+        en: 'Advanced water-cooled and air-cooled chillers, magnetic bearing chillers, and large-scale climate control.',
+        ar: 'مبردات مياه ومبردات هواء متقدمة، ومبردات بمحامل مغناطيسية، وأنظمة التكييف واسعة النطاق.'
+      },
+      slug: 'hvac-solutions'
     },
     {
       title: { en: 'Automation & Control Solutions', ar: 'حلول الأتمتة والتحكم' },

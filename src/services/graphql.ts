@@ -655,7 +655,14 @@ export async function getPartnerProducts(partnerSlug?: string, forceRefresh = fa
             const rawPartner = Array.isArray(f.partner) ? f.partner[0] : f.partner
             const partner = typeof rawPartner === 'string' ? rawPartner.trim().toLowerCase() : ''
             const rawSolution = Array.isArray(f.solution) ? f.solution[0] : f.solution
-            const solution = typeof rawSolution === 'string' ? rawSolution.trim().toLowerCase() : ''
+            let solution = typeof rawSolution === 'string' ? rawSolution.trim().toLowerCase() : ''
+            if (solution === 'refrigeration-hvac-solutions' || solution === 'refrigeration-hvac') {
+              if (partner === 'kirloskar-chillers') {
+                solution = 'hvac-solutions'
+              } else if (partner === 'kirloskar-pneumatic') {
+                solution = 'refrigeration-solutions'
+              }
+            }
             const subcategory = typeof f.subcategory === 'string' && f.subcategory.trim() ? f.subcategory.trim().toLowerCase() : 'all'
 
             const titleEn = f.titleEn || node.title || 'Product'

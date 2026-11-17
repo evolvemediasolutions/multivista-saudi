@@ -35,7 +35,8 @@ export default function Contact() {
 
   const interestOptions = [
     { value: 'air-gas-solutions', label: locale === 'ar' ? 'حلول الهواء والغاز' : 'Air & Gas Solutions' },
-    { value: 'refrigeration-hvac-solutions', label: locale === 'ar' ? 'حلول التبريد والتكييف' : 'Refrigeration & HVAC Solutions' },
+    { value: 'refrigeration-solutions', label: locale === 'ar' ? 'حلول التبريد' : 'Refrigeration Solutions' },
+    { value: 'hvac-solutions', label: locale === 'ar' ? 'حلول التكييف' : 'HVAC Solutions' },
     { value: 'automation-control', label: locale === 'ar' ? 'حلول الأتمتة والتحكم' : 'Automation & Control Solutions' },
     { value: 'non-metallic-solutions', label: locale === 'ar' ? 'حلول المواد غير المعدنية' : 'Non Metallic Solution' },
     { value: 'fire-pump-solutions', label: locale === 'ar' ? 'حلول مضخات الحريق' : 'Fire Pump Solutions' }
