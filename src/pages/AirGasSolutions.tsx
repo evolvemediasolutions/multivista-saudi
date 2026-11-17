@@ -548,12 +548,13 @@ export default function AirGasSolutions() {
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <Link
               to={localizedPath('/solutions/air-gas-solutions/kirloskar-pneumatic')}
-              className="bg-white border border-slate-200/80 hover:border-brand-primary/50 rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center w-full max-w-[280px] sm:max-w-[320px] h-[150px] group"
+              className="bg-white border border-slate-200/80 hover:border-brand-primary/60 rounded-2xl p-6 shadow-2xs hover:shadow-md transition-all duration-300 flex items-center justify-center w-[280px] sm:w-[320px] h-[140px] sm:h-[150px] group overflow-hidden"
+              title="Kirloskar Pneumatic"
             >
               <img
                 src="/PARTNERS LOGO/KIRLOSKAR PNEUMATIC.jpg"
                 alt="Kirloskar Pneumatic"
-                className="max-h-16 max-w-[200px] object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-16 sm:h-20 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
           </div>

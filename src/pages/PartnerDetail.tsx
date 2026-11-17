@@ -390,19 +390,19 @@ export default function PartnerDetail() {
       slug: 'rockwell-automation',
       name: 'Rockwell Automation',
       logo: '/PARTNERS LOGO/ROCKWELL AUTOMATION.png',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[210px] scale-[1.8]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     },
     {
       slug: 'hms-networks',
       name: 'HMS Networks',
       logo: '/LOGO/HMS_logo.png',
-      imgClass: 'h-12 sm:h-14 w-auto max-w-[170px]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     },
     {
       slug: 'prosoft-technology',
       name: 'ProSoft Technology',
       logo: '/PARTNERS LOGO/PROSOFT TECHNOLOGIES.png',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[190px] scale-[1.4]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     }
   ]
 
@@ -411,7 +411,7 @@ export default function PartnerDetail() {
       slug: 'kirloskar-pneumatic',
       name: 'Kirloskar Pneumatic',
       logo: '/PARTNERS LOGO/KIRLOSKAR PNEUMATIC.jpg',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[210px]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     }
   ]
 
@@ -420,7 +420,7 @@ export default function PartnerDetail() {
       slug: 'kirloskar-chillers',
       name: 'Kirloskar Chillers',
       logo: '/PARTNERS LOGO/KCPL.jpg',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[210px]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     }
   ]
 
@@ -429,7 +429,7 @@ export default function PartnerDetail() {
       slug: 'epp-composites',
       name: 'EPP Composites',
       logo: '/PARTNERS LOGO/EPP.jpg',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[210px]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     }
   ]
 
@@ -438,7 +438,7 @@ export default function PartnerDetail() {
       slug: 'spp-pumps',
       name: 'SPP Pumps',
       logo: '/PARTNERS LOGO/SPP.jpg',
-      imgClass: 'h-14 sm:h-16 w-auto max-w-[210px]'
+      imgClass: 'h-11 sm:h-13 w-auto max-w-[85%] object-contain'
     }
   ]
 

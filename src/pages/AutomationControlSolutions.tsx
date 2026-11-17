@@ -476,7 +476,7 @@ export default function AutomationControlSolutions() {
               <img
                 src="/PARTNERS LOGO/ROCKWELL AUTOMATION.png"
                 alt="Rockwell Automation"
-                className="h-16 sm:h-20 w-auto max-w-[85%] object-contain scale-[1.75] group-hover:scale-[1.85] transition-transform duration-300"
+                className="h-14 sm:h-16 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
 
@@ -489,7 +489,7 @@ export default function AutomationControlSolutions() {
               <img
                 src="/LOGO/HMS_logo.png"
                 alt="HMS Networks"
-                className="h-14 sm:h-18 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
+                className="h-14 sm:h-16 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
 
@@ -502,7 +502,7 @@ export default function AutomationControlSolutions() {
               <img
                 src="/PARTNERS LOGO/PROSOFT TECHNOLOGIES.png"
                 alt="ProSoft Technology"
-                className="h-16 sm:h-20 w-auto max-w-[85%] object-contain scale-[1.45] group-hover:scale-[1.55] transition-transform duration-300"
+                className="h-14 sm:h-16 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
           </div>

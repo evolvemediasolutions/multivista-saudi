@@ -241,16 +241,16 @@ export default function Home() {
   ]
 
   const partnerLogos = [
-    { name: 'Rockwell Automation', image: '/PARTNERS LOGO/ROCKWELL AUTOMATION.png', slug: 'rockwell-automation', scale: 'scale-[1.45]' },
-    { name: 'Allen Bradley', image: '/PARTNERS LOGO/ALLEN BRADLEY.png', slug: 'rockwell-automation', scale: 'scale-[1.45]' },
-    { name: 'FactoryTalk', image: '/PARTNERS LOGO/FACTORY TALK.png', slug: 'rockwell-automation', scale: 'scale-115' },
+    { name: 'Rockwell Automation', image: '/PARTNERS LOGO/ROCKWELL AUTOMATION.png', slug: 'rockwell-automation', scale: 'scale-100' },
+    { name: 'Allen Bradley', image: '/PARTNERS LOGO/ALLEN BRADLEY.png', slug: 'rockwell-automation', scale: 'scale-100' },
+    { name: 'FactoryTalk', image: '/PARTNERS LOGO/FACTORY TALK.png', slug: 'rockwell-automation', scale: 'scale-100' },
     { name: 'EPP Composites', image: '/PARTNERS LOGO/EPP.jpg', slug: 'epp-composites', scale: 'scale-100' },
     { name: 'SPP Pumps', image: '/PARTNERS LOGO/SPP.jpg', slug: 'spp-pumps', scale: 'scale-100' },
     { name: 'Kirloskar Pneumatic', image: '/PARTNERS LOGO/KIRLOSKAR PNEUMATIC.jpg', slug: 'kirloskar-pneumatic', scale: 'scale-100' },
     { name: 'Kirloskar Chillers', image: '/PARTNERS LOGO/KCPL.jpg', slug: 'kirloskar-chillers', scale: 'scale-100' },
-    { name: 'HMS Networks', image: '/LOGO/HMS_logo.png', slug: 'hms-networks', scale: 'scale-90' },
-    { name: 'ProSoft Technology', image: '/PARTNERS LOGO/PROSOFT TECHNOLOGIES.png', slug: 'prosoft-technology', scale: 'scale-120' },
-    { name: 'Lifecycle IQ Services', image: '/PARTNERS LOGO/LIFECYCLE IQ SERVICES.webp', slug: 'rockwell-automation', scale: 'scale-115' }
+    { name: 'HMS Networks', image: '/LOGO/HMS_logo.png', slug: 'hms-networks', scale: 'scale-100' },
+    { name: 'ProSoft Technology', image: '/PARTNERS LOGO/PROSOFT TECHNOLOGIES.png', slug: 'prosoft-technology', scale: 'scale-100' },
+    { name: 'Lifecycle IQ Services', image: '/PARTNERS LOGO/LIFECYCLE IQ SERVICES.webp', slug: 'rockwell-automation', scale: 'scale-100' }
   ]
 
   const localizedPath = (path: string) => `/${locale}${path === '/' ? '' : path}`

@@ -108,7 +108,7 @@ export default function Partners() {
                       <img 
                         src={localLogo} 
                         alt={partner.name} 
-                        className="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-all duration-500 relative z-10" 
+                        className="max-h-24 sm:max-h-28 max-w-[80%] object-contain transform group-hover:scale-105 transition-all duration-500 relative z-10" 
                       />
                     </div>
 

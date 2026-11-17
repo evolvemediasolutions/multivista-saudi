@@ -385,7 +385,7 @@ export default function RefrigerationSolutions() {
               <img
                 src="/PARTNERS LOGO/KIRLOSKAR PNEUMATIC.jpg"
                 alt="Kirloskar Pneumatic"
-                className="h-16 sm:h-20 w-auto max-w-[85%] object-contain scale-100 group-hover:scale-105 transition-transform duration-300"
+                className="h-16 sm:h-20 w-auto max-w-[85%] object-contain group-hover:scale-105 transition-transform duration-300"
               />
             </Link>
           </div>
