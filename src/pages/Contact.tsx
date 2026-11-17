@@ -44,16 +44,16 @@ export default function Contact() {
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {}
-    
+
     if (!formData.name.trim()) newErrors.name = t('validation.required')
     if (!formData.company.trim()) newErrors.company = t('validation.required')
-    
+
     if (!formData.email.trim()) {
       newErrors.email = t('validation.required')
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = t('validation.email')
     }
-    
+
     if (!formData.interest) newErrors.interest = t('validation.required')
     if (!formData.message.trim()) newErrors.message = t('validation.required')
 
@@ -83,7 +83,7 @@ export default function Contact() {
 
   return (
     <div className="font-sans min-h-screen bg-slate-50">
-      
+
       {/* Contact Header */}
       <div className="pt-28 sm:pt-32 pb-6 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <section className="relative w-full h-[450px] rounded-3xl overflow-hidden bg-slate-900 text-white flex items-center justify-center">
@@ -110,7 +110,7 @@ export default function Contact() {
       {/* Main Grid: Form + Address Info */}
       <section className="py-20 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          
+
           {/* Address and details */}
           <div className="lg:col-span-1 space-y-8 bg-white border border-slate-100 p-8 rounded-2xl shadow-sm">
             <div className="space-y-2">
@@ -183,9 +183,8 @@ export default function Contact() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                      errors.name ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${errors.name ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
+                      }`}
                   />
                   {errors.name && <p className="text-rose-500 text-xs font-semibold">{errors.name}</p>}
                 </div>
@@ -200,9 +199,8 @@ export default function Contact() {
                     id="company"
                     value={formData.company}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                      errors.company ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${errors.company ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
+                      }`}
                   />
                   {errors.company && <p className="text-rose-500 text-xs font-semibold">{errors.company}</p>}
                 </div>
@@ -219,9 +217,8 @@ export default function Contact() {
                     id="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                      errors.email ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${errors.email ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
+                      }`}
                   />
                   {errors.email && <p className="text-rose-500 text-xs font-semibold">{errors.email}</p>}
                 </div>
@@ -250,9 +247,8 @@ export default function Contact() {
                   id="interest"
                   value={formData.interest}
                   onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
-                  className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                    errors.interest ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
-                  }`}
+                  className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${errors.interest ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
+                    }`}
                 >
                   <option value="">{locale === 'ar' ? 'حدد مجالك المفضل' : 'Select an area of interest'}</option>
                   {interestOptions.map((opt) => (
@@ -274,9 +270,8 @@ export default function Contact() {
                   rows={5}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${
-                    errors.message ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
-                  }`}
+                  className={`w-full px-4 py-2.5 rounded-lg border bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-primary/20 ${errors.message ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 focus:border-brand-primary'
+                    }`}
                 />
                 {errors.message && <p className="text-rose-500 text-xs font-semibold">{errors.message}</p>}
               </div>
